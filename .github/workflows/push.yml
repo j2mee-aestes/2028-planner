@@ -18,10 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx esbuild scripts/send-push.ts --bundle --platform=node --format=esm --target=node20 --packages=external --outfile=.push/send.mjs
+      - run: npx esbuild scripts/send-push.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=.push/send.mjs
       - run: node .push/send.mjs "${{ github.event.inputs.mode || (github.event.schedule == '0 1 * * 6' && 'saturday' || 'morning') }}"
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
