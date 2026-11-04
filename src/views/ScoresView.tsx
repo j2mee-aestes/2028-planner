@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ScoreModal } from '../components/ScoreModal';
+import { IconPlus } from '../components/icons';
 import { inkVars, Segmented } from '../components/ui';
 import { monthKey } from '../lib/date';
 import { useStore } from '../lib/store';
@@ -46,8 +47,8 @@ export function ScoresView() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">성적</h1>
-        <button className="btn-primary" onClick={() => setEdit({ type: tab })}>+ 성적 입력</button>
+        <h1 className="text-lg">성적</h1>
+        <button className="btn-primary" onClick={() => setEdit({ type: tab })}><IconPlus size={15} />성적 입력</button>
       </div>
       <Segmented value={tab} onChange={setTab} options={[['official', '학교 응시 (평가원·교육청)'], ['self', '내가 푼 모고']]} />
 
@@ -55,13 +56,13 @@ export function ScoresView() {
         {list.length === 0 && <p className="text-sm muted">기록이 없습니다. 모고 항목을 체크하면 점수 입력창이 열립니다.</p>}
         {Object.entries(byMonth).map(([m, ss]) => (
           <div key={m}>
-            <div className="mb-1 text-xs font-semibold muted">{m.replace('-', '년 ')}월 · {ss.length}회</div>
+            <div className="mb-1 text-xs muted">{m.replace('-', '년 ')}월 · {ss.length}회</div>
             <ul className="card divide-y divide-zinc-100 dark:divide-zinc-800">
               {ss.map((s) => (
                 <li key={s.id}>
-                  <button className="w-full px-3 py-2 text-left" onClick={() => setEdit(s)}>
+                  <button className="press w-full px-4 py-3 text-left" onClick={() => setEdit(s)}>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-sm font-medium">{s.name}</span>
+                      <span className="text-sm">{s.name}</span>
                       <span className="text-xs muted">{s.org} · {s.date.slice(5)}</span>
                     </div>
                     <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
@@ -82,7 +83,7 @@ export function ScoresView() {
 
       <section className="card space-y-3 p-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-sm font-bold">점검</h2>
+          <h2 className="text-sm">점검</h2>
           <select className="input w-28" value={subject} onChange={(e) => setSubject(e.target.value)}>
             {SUBJECTS.filter((s) => s.questions > 0).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
@@ -123,7 +124,7 @@ export function ScoresView() {
           {top.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
               <span className="muted">자주 틀린 번호</span>
-              {top.map((t) => <span key={t.label} className="rounded bg-zinc-100 px-1.5 py-0.5 font-medium dark:bg-zinc-800">{t.label}번 ×{t.count}</span>)}
+              {top.map((t) => <span key={t.label} className="rounded bg-zinc-100 px-1.5 py-0.5 dark:bg-zinc-800">{t.label}번 ×{t.count}</span>)}
             </div>
           )}
         </div>

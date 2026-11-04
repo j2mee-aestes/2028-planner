@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DayDetail } from '../components/DayDetail';
+import { IconChevronLeft, IconChevronRight } from '../components/icons';
 import { Dot, Segmented, Sheet } from '../components/ui';
 import { addDays, addMonths, eachDay, endOfMonth, fmtMin, isWeekend, kstToday, prettyDate, startOfMonth, startOfWeek, weekday } from '../lib/date';
 import { PHASE_LABEL } from '../lib/plan';
@@ -62,13 +63,13 @@ export function CalendarView() {
 
   const header = (
     <div className="mb-3 flex flex-wrap items-center gap-2">
-      <button className="btn-ghost px-2" onClick={() => move(-1)} aria-label="이전">‹</button>
+      <button className="icon-btn" onClick={() => move(-1)} aria-label="이전"><IconChevronLeft /></button>
       <h1 className="min-w-[9rem] text-center">
         {mode === 'month' ? (
           <><span className="text-2xl">{Number(cursor.slice(5, 7))}월</span> <span className="text-sm muted">{cursor.slice(0, 4)}</span></>
         ) : <span className="text-lg">{title}</span>}
       </h1>
-      <button className="btn-ghost px-2" onClick={() => move(1)} aria-label="다음">›</button>
+      <button className="icon-btn" onClick={() => move(1)} aria-label="다음"><IconChevronRight /></button>
       <button className="btn-outline" onClick={() => { setCursor(today); setSelected(today); }}>오늘</button>
       <div className="ml-auto">
         <Segmented value={mode} onChange={setMode} options={[['month', '월'], ['week', '주'], ['day', '일']]} />
@@ -87,14 +88,14 @@ export function CalendarView() {
     body = (
       <div>
         <div className="mb-3 text-sm muted">
-          이번 달 <span className="font-bold text-zinc-900 tabular-nums dark:text-zinc-100">{fmtMin(monthMin)}</span>
+          이번 달 <span className="text-zinc-900 tabular-nums dark:text-zinc-100">{fmtMin(monthMin)}</span>
         </div>
         <div className="grid grid-cols-7 pb-1 text-center text-xs muted sm:grid-cols-[repeat(7,minmax(0,1fr))_3.5rem]">
           {WD.map((w, i) => <div key={w} className={i === 0 ? 'text-rose-400' : ''}>{w}</div>)}
           <div className="hidden sm:block">주간</div>
         </div>
         {weeks.map((wk) => (
-          <div key={wk[0]} className="grid grid-cols-7 border-t border-zinc-100 dark:border-zinc-800/80 sm:grid-cols-[repeat(7,minmax(0,1fr))_3.5rem]">
+          <div key={wk[0]} className="grid grid-cols-7 border-t border-zinc-200/60 dark:border-zinc-800/80 sm:grid-cols-[repeat(7,minmax(0,1fr))_3.5rem]">
             {wk.map((d) => {
               const s = sum(d);
               const out = d.slice(0, 7) !== m;
@@ -104,8 +105,8 @@ export function CalendarView() {
                 <button
                   key={d}
                   onClick={() => pick(d)}
-                  className={`group m-0.5 flex min-h-[4.75rem] flex-col gap-1 rounded-xl p-1.5 text-left transition sm:min-h-[6rem] sm:p-2 ${
-                    isSel ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  className={`press group m-0.5 flex min-h-[4.75rem] flex-col gap-1 rounded-2xl p-1.5 text-left sm:min-h-[6rem] sm:p-2 ${
+                    isSel ? 'bg-white shadow-[0_2px_10px_rgba(0,0,0,0.07)] dark:bg-zinc-800' : 'hover:bg-white/70 dark:hover:bg-zinc-900'
                   } ${out ? 'opacity-30' : ''}`}
                 >
                   <div className="flex items-center gap-1">
@@ -132,7 +133,7 @@ export function CalendarView() {
                 </button>
               );
             })}
-            <div className="hidden items-end justify-center pb-2 text-xs font-bold tabular-nums sm:flex">
+            <div className="hidden items-end justify-center pb-2 text-xs tabular-nums sm:flex">
               {(() => { const t = wk.reduce((a, d) => a + sum(d).min, 0); return t ? fmtMin(t) : <span className="font-normal muted">–</span>; })()}
             </div>
           </div>
@@ -149,7 +150,7 @@ export function CalendarView() {
       <div className="space-y-2">
         <div className="card flex items-baseline gap-2 p-3">
           <span className="label">주간 합계</span>
-          <span className="text-xl font-bold tabular-nums">{fmtMin(total)}</span>
+          <span className="text-xl tabular-nums">{fmtMin(total)}</span>
           <span className="text-sm muted">/ 목표 {fmtMin(target)} ({target ? Math.round((total / target) * 100) : 0}%)</span>
         </div>
         {ds.map((d) => {
@@ -157,8 +158,8 @@ export function CalendarView() {
           const done = s.tasks.filter((t) => t.done).length;
           return (
             <button key={d} onClick={() => pick(d)}
-              className={`card flex w-full items-center gap-3 p-3 text-left ${selected === d && wide ? 'ring-2 ring-zinc-900 dark:ring-zinc-100' : ''} ${s.off ? 'opacity-60' : ''}`}>
-              <div className={`w-16 text-sm font-semibold ${d === today ? 'underline underline-offset-4' : weekday(d) === 0 || s.hol ? 'text-rose-400' : ''}`}>
+              className={`card press flex w-full items-center gap-3 p-3.5 text-left ${selected === d && wide ? 'ring-2 ring-zinc-900 dark:ring-zinc-100' : ''} ${s.off ? 'opacity-60' : ''}`}>
+              <div className={`w-16 text-sm ${d === today ? 'underline underline-offset-4' : weekday(d) === 0 || s.hol ? 'text-rose-400' : ''}`}>
                 {prettyDate(d)}
               </div>
               <div className="flex-1 space-y-1">
@@ -171,7 +172,7 @@ export function CalendarView() {
                   <div className="h-full bg-zinc-900 dark:bg-zinc-100" style={{ width: `${s.tasks.length ? (done / s.tasks.length) * 100 : 0}%` }} />
                 </div>
               </div>
-              <div className="w-12 text-right text-sm font-medium tabular-nums">{fmtMin(s.min)}</div>
+              <div className="w-12 text-right text-sm tabular-nums">{fmtMin(s.min)}</div>
             </button>
           );
         })}
@@ -194,7 +195,7 @@ export function CalendarView() {
         </aside>
       )}
       {!wide && (
-        <Sheet open={sheet} onClose={() => setSheet(false)} title=" ">
+        <Sheet open={sheet} onClose={() => setSheet(false)} title="">
           <DayDetail date={selected} />
         </Sheet>
       )}

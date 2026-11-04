@@ -2,17 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-html { -webkit-tap-highlight-color: transparent; }
-body { padding-bottom: env(safe-area-inset-bottom); }
-.card { @apply rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900; }
-.btn { @apply inline-flex whitespace-nowrap shrink-0 items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition active:scale-95 disabled:opacity-40; }
-.btn-primary { @apply btn bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white; }
-.btn-ghost { @apply btn text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800; }
-.btn-outline { @apply btn border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800; }
-.input { @apply w-full rounded-lg border border-zinc-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950; }
-.label { @apply text-xs font-medium text-zinc-500 dark:text-zinc-400; }
-.muted { @apply text-zinc-500 dark:text-zinc-400; }
-:root { --surface: #ffffff; }
-.dark { --surface: #0f172a; }
+:root {
+  --surface: #ffffff;
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dark { --surface: #18181b; }
+
+html { -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+body { padding-bottom: env(safe-area-inset-bottom); overscroll-behavior-y: none; }
+*:focus:not(:focus-visible) { outline: none; }
+:focus-visible { outline: 2px solid #a1a1aa; outline-offset: 2px; border-radius: 9999px; }
+button { -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+
+@layer components {
+  /* 누르는 모든 요소: 부드럽게 눌림 */
+  .press { transition: transform 0.2s var(--ease-out), background-color 0.2s, opacity 0.2s, box-shadow 0.2s; }
+  .press:active { transform: scale(0.96); }
+
+  /* 반투명 블러 (iOS 재질) */
+  .glass {
+    background: rgb(255 255 255 / 0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  .dark .glass { background: rgb(24 24 27 / 0.62); }
+
+  .card { @apply rounded-2xl border border-zinc-200/70 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:border-zinc-800 dark:bg-zinc-900; }
+  .btn { @apply press inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm disabled:pointer-events-none disabled:opacity-40; }
+  .btn-primary { @apply btn bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white; }
+  .btn-ghost { @apply btn text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800; }
+  .btn-outline { @apply btn bg-zinc-100 text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700; }
+  .icon-btn { @apply press inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800; }
+  .input { @apply w-full rounded-xl border border-transparent bg-zinc-100 px-3 py-2 text-sm outline-none transition focus:border-zinc-300 focus:bg-white dark:bg-zinc-800 dark:focus:border-zinc-600 dark:focus:bg-zinc-900; }
+  .label { @apply text-xs text-zinc-500 dark:text-zinc-400; }
+  .muted { @apply text-zinc-500 dark:text-zinc-400; }
+}
+
+/* 과목 글자색: 라이트=진한색, 다크=파스텔 */
 .subj-ink { color: var(--ink); }
 .dark .subj-ink { color: var(--pastel); }
+
+/* 화면 전환 */
+@keyframes view-in { from { opacity: 0; transform: translateY(8px); } }
+.anim-view { animation: view-in 0.4s var(--ease-spring) both; }
+
+/* 시트 (모바일: 아래에서 올라옴 / PC: 가운데 팝) */
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-down { to { transform: translateY(100%); } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.95) translateY(10px); } }
+@keyframes pop-out { to { opacity: 0; transform: scale(0.97); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+.sheet-backdrop { animation: fade-in 0.3s ease both; }
+.sheet-backdrop.closing { animation: fade-out 0.26s ease both; }
+.sheet-panel { animation: sheet-up 0.5s var(--ease-spring) both; }
+.sheet-panel.closing { animation: sheet-down 0.26s cubic-bezier(0.4, 0, 1, 1) both; }
+@media (min-width: 640px) {
+  .sheet-panel { animation: pop-in 0.32s var(--ease-spring) both; }
+  .sheet-panel.closing { animation: pop-out 0.2s ease both; }
+}
+
+/* 체크 */
+@keyframes check-pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes check-draw { from { stroke-dashoffset: 16; } }
+.check-on { animation: check-pop 0.35s var(--ease-spring); }
+.check-on path { stroke-dasharray: 16; animation: check-draw 0.3s 0.05s var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}

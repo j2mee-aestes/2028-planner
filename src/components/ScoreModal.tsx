@@ -70,9 +70,9 @@ export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | nul
         {Object.entries(s.subjects).map(([id, v]) => {
           const sub = subjectOf(id);
           return (
-            <div key={id} className="rounded-lg border p-2 dark:border-zinc-800">
+            <div key={id} className="rounded-2xl bg-zinc-50 p-3 dark:bg-zinc-800/50">
               <div className="mb-2 flex items-center justify-between">
-                <span className="subj-ink text-sm font-bold" style={inkVars(id)}>{sub.name}</span>
+                <span className="subj-ink text-sm" style={inkVars(id)}>{sub.name}</span>
                 <button
                   className="text-xs muted"
                   onClick={() => setS((x) => { const c = { ...x.subjects }; delete c[id]; return { ...x, subjects: c }; })}
@@ -98,7 +98,7 @@ export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | nul
                         <button
                           key={n}
                           onClick={() => toggleWrong(id, n)}
-                          className={`h-7 rounded text-xs tabular-nums ${on ? 'font-bold text-white' : 'bg-zinc-100 dark:bg-zinc-800'}`}
+                          className={`press h-8 rounded-lg text-xs tabular-nums transition-colors ${on ? 'text-white' : 'bg-zinc-100 dark:bg-zinc-800'}`}
                           style={on ? { background: sub.ink } : undefined}
                         >
                           {n}
@@ -123,7 +123,7 @@ export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | nul
         <textarea className="input" rows={2} placeholder="메모" value={s.memo ?? ''} onChange={(e) => setS({ ...s, memo: e.target.value })} />
         <div className="flex justify-between">
           {existing ? (
-            <button className="btn text-red-600" onClick={() => { if (confirm('삭제할까요?')) { deleteScore(s.id); onClose(); } }}>삭제</button>
+            <button className="btn-ghost text-red-600 dark:text-red-400" onClick={() => { if (confirm('삭제할까요?')) { deleteScore(s.id); onClose(); } }}>삭제</button>
           ) : <span />}
           <button className="btn-primary px-5" onClick={save}>저장</button>
         </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fmtClock, kstDateOf, uid } from '../lib/date';
 import { useStore } from '../lib/store';
 import { subjectOf } from '../seed/subjects';
+import { IconPlay, IconStop } from './icons';
 import { SubjectSelect } from './ui';
 
 export function Timer({ defaultSubject = 'math' }: { defaultSubject?: string }) {
@@ -33,20 +34,20 @@ export function Timer({ defaultSubject = 'math' }: { defaultSubject?: string }) 
   if (running) {
     const s = subjectOf(running.subject);
     return (
-      <div className="flex items-center gap-3 rounded-xl p-3 text-zinc-900" style={{ background: s.color }}>
+      <div className="flex items-center gap-3 rounded-2xl p-4 text-zinc-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]" style={{ background: s.color }}>
         <div className="flex-1">
           <div className="text-xs opacity-90">{s.name} 공부 중</div>
-          <div className="text-2xl font-bold tabular-nums">{fmtClock(now - running.startedAt)}</div>
+          <div className="text-3xl tabular-nums tracking-tight">{fmtClock(now - running.startedAt)}</div>
         </div>
         <button className="btn bg-white/40 hover:bg-white/60" onClick={cancel}>취소</button>
-        <button className="btn bg-zinc-900 font-bold text-white" onClick={stop}>■ 정지</button>
+        <button className="btn bg-zinc-900 text-white" onClick={stop}><IconStop size={15} />정지</button>
       </div>
     );
   }
   return (
     <div className="flex items-center gap-2">
       <SubjectSelect value={subject} onChange={setSubject} className="flex-1" />
-      <button className="btn-primary px-4" onClick={start}>▶ 시작</button>
+      <button className="btn-primary" onClick={start}><IconPlay size={14} />시작</button>
     </div>
   );
 }

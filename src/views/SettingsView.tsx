@@ -6,6 +6,8 @@ import { useStore } from '../lib/store';
 import type { SchoolCalendar } from '../lib/types';
 import { PLAN_END, PLAN_START } from '../seed/calendar';
 import { subjectOf } from '../seed/subjects';
+import { IconClose } from '../components/icons';
+import { Disclosure, Segmented } from '../components/ui';
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -37,7 +39,7 @@ function DateList({ title, items, onChange, withName }: {
         {items.map((x) => (
           <span key={x.date} className="inline-flex items-center gap-1 rounded-full bg-zinc-100 py-0.5 pl-2 pr-1 text-xs dark:bg-zinc-800">
             {prettyDate(x.date)}{x.name ? ` ${x.name}` : ''}
-            <button className="px-1 muted" onClick={() => onChange(items.filter((y) => y.date !== x.date).map((y) => ({ date: y.date, name: y.name ?? '' })))}>✕</button>
+            <button className="press rounded-full p-0.5 muted" aria-label="삭제" onClick={() => onChange(items.filter((y) => y.date !== x.date).map((y) => ({ date: y.date, name: y.name ?? '' })))}><IconClose size={13} /></button>
           </span>
         ))}
       </div>
@@ -64,10 +66,10 @@ export function SettingsView({ email }: { email?: string | null }) {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-bold">설정</h1>
+      <h1 className="text-lg">설정</h1>
 
       <section className="card space-y-3 p-3">
-        <h2 className="text-sm font-bold">학교 일정</h2>
+        <h2 className="text-sm">학교 일정</h2>
         <div className="grid grid-cols-2 gap-2">
           <Field label="겨울방학 마지막 날" value={school.winterEnd} onChange={(v) => setSchool({ ...school, winterEnd: v })} />
           <Field label="1학기 개학" value={school.sem1Start} onChange={(v) => setSchool({ ...school, sem1Start: v })} />
@@ -102,7 +104,7 @@ export function SettingsView({ email }: { email?: string | null }) {
       </section>
 
       <section className="card space-y-2 p-3">
-        <h2 className="text-sm font-bold">하루 목표 시간</h2>
+        <h2 className="text-sm">하루 목표 시간</h2>
         <div className="grid grid-cols-2 gap-2">
           {(['weekday', 'weekend'] as const).map((k) => (
             <label key={k}>
@@ -115,23 +117,22 @@ export function SettingsView({ email }: { email?: string | null }) {
       </section>
 
       <section className="card space-y-3 p-3">
-        <h2 className="text-sm font-bold">휴일 · 공부 금지일</h2>
+        <h2 className="text-sm">휴일 · 공부 금지일</h2>
         <DateList title="임시공휴일 추가 (연휴 규칙 적용)" withName items={s.extraHolidays}
           onChange={(v) => updateSettings((x) => ({ ...x, extraHolidays: v }))} />
         <DateList title="추가 휴무일 (무조건 쉼)" items={s.extraOff.map((date) => ({ date }))}
           onChange={(v) => updateSettings((x) => ({ ...x, extraOff: v.map((y) => y.date) }))} />
         <DateList title="강제 공부일 (규칙상 쉬는 날이지만 공부)" items={s.extraStudy.map((date) => ({ date }))}
           onChange={(v) => updateSettings((x) => ({ ...x, extraStudy: v.map((y) => y.date) }))} />
-        <details>
-          <summary className="cursor-pointer text-xs font-medium muted">계산된 공부 금지일 {offList.length}일 보기</summary>
-          <ul className="mt-1 grid grid-cols-1 gap-0.5 text-xs sm:grid-cols-2">
-            {offList.map(([d, r]) => <li key={d}><b>{prettyDate(d)}</b> {r}</li>)}
+        <Disclosure title={<span className="text-xs muted">계산된 공부 금지일 {offList.length}일 보기</span>}>
+          <ul className="mt-2 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
+            {offList.map(([d, r]) => <li key={d}><span className="tabular-nums">{prettyDate(d)}</span> <span className="muted">{r}</span></li>)}
           </ul>
-        </details>
+        </Disclosure>
       </section>
 
       <section className="card p-3">
-        <h2 className="mb-2 text-sm font-bold">커리 배치 현황</h2>
+        <h2 className="mb-2 text-sm">커리 배치 현황</h2>
         <p className="mb-2 text-xs muted">교재·분량 수정은 src/seed/curriculum/*.ts 에서 (README 참고). 미배정이 있으면 기간 안에 다 못 들어간 것입니다.</p>
         <ul className="divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
           {plan.stats.map(({ track, total, assigned, first, last }) => (
@@ -139,14 +140,14 @@ export function SettingsView({ email }: { email?: string | null }) {
               <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: subjectOf(track.subject).color }} />
               <span className="min-w-0 flex-1 truncate">{track.title}{track.tentative ? ' (미확정)' : ''}</span>
               <span className="text-xs tabular-nums muted">{first ? `${prettyDate(first)}~${prettyDate(last!)}` : '-'}</span>
-              <span className={`w-14 text-right text-xs tabular-nums ${assigned < total ? 'font-bold text-amber-600' : 'muted'}`}>{assigned}/{total}</span>
+              <span className={`w-14 text-right text-xs tabular-nums ${assigned < total ? ' text-amber-600' : 'muted'}`}>{assigned}/{total}</span>
             </li>
           ))}
         </ul>
       </section>
 
       <section className="card space-y-2 p-3">
-        <h2 className="text-sm font-bold">백업</h2>
+        <h2 className="text-sm">백업</h2>
         <div className="flex gap-2">
           <button className="btn-outline" onClick={() => exportJSON(data)}>JSON 내보내기</button>
           <button className="btn-outline" onClick={() => file.current?.click()}>JSON 가져오기</button>
@@ -166,12 +167,8 @@ export function SettingsView({ email }: { email?: string | null }) {
       </section>
 
       <section className="card space-y-2 p-3">
-        <h2 className="text-sm font-bold">화면 · 계정</h2>
-        <div className="flex gap-1.5">
-          {[['system', '시스템'], ['light', '라이트'], ['dark', '다크']].map(([v, l]) => (
-            <button key={v} className={theme === v ? 'btn-primary' : 'btn-outline'} onClick={() => setTheme(v)}>{l}</button>
-          ))}
-        </div>
+        <h2 className="text-sm">화면 · 계정</h2>
+        <Segmented value={theme} onChange={setTheme} options={[['system', '시스템'], ['light', '라이트'], ['dark', '다크']]} />
         {firebaseEnabled ? (
           <div className="flex items-center justify-between text-sm">
             <span className="muted">{email}</span>

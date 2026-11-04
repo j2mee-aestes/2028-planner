@@ -1,6 +1,7 @@
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { DayDetail } from './components/DayDetail';
+import { IconCalendar, IconChart, IconScore, IconSettings, IconToday } from './components/icons';
 import { diffDays, kstToday } from './lib/date';
 import { ALLOWED_EMAIL, auth, firebaseEnabled, firestoreBackend, localBackend, login, logout } from './lib/firebase';
 import { StoreProvider, useStore } from './lib/store';
@@ -11,12 +12,12 @@ import { SettingsView } from './views/SettingsView';
 import { StatsView } from './views/StatsView';
 
 type View = 'calendar' | 'today' | 'stats' | 'scores' | 'settings';
-const NAV: [View, string, string][] = [
-  ['calendar', '달력', '📅'],
-  ['today', '오늘', '✅'],
-  ['stats', '통계', '📊'],
-  ['scores', '성적', '📝'],
-  ['settings', '설정', '⚙️'],
+const NAV: [View, string, (p: { size?: number }) => JSX.Element][] = [
+  ['calendar', '달력', IconCalendar],
+  ['today', '오늘', IconToday],
+  ['stats', '통계', IconChart],
+  ['scores', '성적', IconScore],
+  ['settings', '설정', IconSettings],
 ];
 
 function Shell({ email }: { email?: string | null }) {
@@ -28,37 +29,39 @@ function Shell({ email }: { email?: string | null }) {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl">
-      <nav className="sticky top-0 hidden h-screen w-48 shrink-0 flex-col gap-1 border-r border-zinc-200 p-3 dark:border-zinc-800 md:flex">
-        <div className="mb-3 px-2">
-          <div className="text-sm font-bold">2028 수능 플래너</div>
-          <div className="text-xs muted">수능 D-{dday}</div>
+      <nav className="sticky top-0 hidden h-screen w-52 shrink-0 flex-col gap-0.5 px-3 py-5 md:flex">
+        <div className="mb-5 px-3">
+          <div className="text-base">2028 수능 플래너</div>
+          <div className="mt-1 inline-block rounded-full bg-zinc-900 px-2 py-0.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900">D-{dday}</div>
         </div>
-        {NAV.map(([v, l, i]) => (
+        {NAV.map(([v, l, Icon]) => (
           <button key={v} onClick={() => setView(v)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${view === v ? 'bg-zinc-200 font-semibold dark:bg-zinc-800' : 'hover:bg-zinc-100 dark:hover:bg-zinc-900'}`}>
-            <span>{i}</span>{l}
+            className={`press flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${view === v ? 'bg-white text-zinc-900 shadow-[0_1px_3px_rgba(0,0,0,0.08)] dark:bg-zinc-800 dark:text-zinc-50' : 'muted hover:bg-zinc-200/50 dark:hover:bg-zinc-900'}`}>
+            <Icon size={19} />{l}
           </button>
         ))}
       </nav>
-      <main className="min-w-0 flex-1 px-4 pb-24 pt-4 md:px-6 md:pb-8">
-        <div className="mb-3 flex items-center justify-between md:hidden">
-          <span className="text-sm font-bold">2028 수능 플래너</span>
-          <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-bold text-white dark:bg-zinc-100 dark:text-zinc-900">D-{dday}</span>
+      <main className="min-w-0 flex-1 px-4 pb-28 md:px-6 md:pb-8 md:pt-5">
+        <div className="glass sticky top-0 z-30 -mx-4 mb-3 flex items-center justify-between border-b border-zinc-200/60 px-4 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] dark:border-zinc-800/60 md:hidden">
+          <span className="text-[15px]">2028 수능 플래너</span>
+          <span className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900">D-{dday}</span>
         </div>
         {!loaded ? <p className="muted">불러오는 중…</p> : (
-          <>
+          <div key={view} className="anim-view">
             {view === 'calendar' && <CalendarView />}
             {view === 'today' && <div className="mx-auto max-w-xl"><DayDetail date={today} /></div>}
             {view === 'stats' && <StatsView />}
             {view === 'scores' && <ScoresView />}
             {view === 'settings' && <SettingsView email={email} />}
-          </>
+          </div>
         )}
       </main>
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 md:hidden">
-        {NAV.map(([v, l, i]) => (
-          <button key={v} onClick={() => setView(v)} className={`flex flex-col items-center py-2 text-[11px] ${view === v ? 'font-bold' : 'muted'}`}>
-            <span className="text-lg leading-none">{i}</span>{l}
+      <nav className="glass fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 grid grid-cols-5 rounded-[26px] border border-white/50 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:border-zinc-700/50 md:hidden">
+        {NAV.map(([v, l, Icon]) => (
+          <button key={v} onClick={() => setView(v)}
+            className={`press flex flex-col items-center gap-0.5 rounded-[20px] py-1.5 text-[10.5px] transition-colors duration-300 ${
+              view === v ? 'bg-zinc-900/[0.06] text-zinc-900 dark:bg-white/10 dark:text-white' : 'text-zinc-400 dark:text-zinc-500'}`}>
+            <Icon size={22} />{l}
           </button>
         ))}
       </nav>
@@ -88,7 +91,8 @@ export default function App() {
   if (!backend)
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-        <h1 className="text-xl font-bold">2028 수능 플래너</h1>
+        <IconCalendar size={40} />
+        <h1 className="text-xl">2028 수능 플래너</h1>
         <button className="btn-primary px-6 py-2.5" onClick={() => login().catch((e) => setErr(e.message))}>Google로 로그인</button>
         {err && <p className="text-sm text-red-600">{err}</p>}
       </div>
