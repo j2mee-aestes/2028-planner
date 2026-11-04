@@ -120,3 +120,26 @@ describe('오답 재풀이·연속 공부·진도', () => {
     expect(tp.projected! > tp.last!).toBe(true);
   });
 });
+
+import { elapsedMs } from './timer';
+import { statsStart } from '../seed/calendar';
+describe('타이머·연습 기간', () => {
+  it('일시정지 시간은 빼고 계산', () => {
+    const t0 = 1_000_000;
+    const running = { subject: 'math', startedAt: t0, firstStart: t0, accum: 0, pausedAt: null };
+    expect(elapsedMs(running, t0 + 10 * 60000)).toBe(10 * 60000);
+    const paused = { ...running, accum: 10 * 60000, pausedAt: t0 + 10 * 60000 };
+    expect(elapsedMs(paused, t0 + 30 * 60000)).toBe(10 * 60000);
+    const resumed = { ...paused, startedAt: t0 + 30 * 60000, pausedAt: null };
+    expect(elapsedMs(resumed, t0 + 35 * 60000)).toBe(15 * 60000);
+  });
+  it('연습 기간엔 11/1 부터, 12/15 부터는 새로 집계', () => {
+    expect(statsStart('2026-11-04')).toBe('2026-11-01');
+    expect(statsStart('2026-12-15')).toBe('2026-12-15');
+    const log = { checks: {}, edits: {}, custom: [], logs: [{ id: 'x', subject: 'kor', min: 60, src: 'manual' as const }] };
+    const p = generatePlan(S);
+    const days = { '2026-11-02': log, '2026-11-03': log, '2026-12-14': log };
+    expect(streaks({ settings: S, days, scores: {}, wrongs: {} }, p, '2026-11-04').current).toBe(2);
+    expect(streaks({ settings: S, days, scores: {}, wrongs: {} }, p, '2026-12-15').studied).toBe(0); // 연습 기록 제외
+  });
+});

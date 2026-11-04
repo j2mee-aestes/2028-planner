@@ -3,6 +3,9 @@ import { EVENTS, HOLIDAYS, PERSONAL_OFF, PLAN_END, PLAN_START } from '../seed/ca
 import { addDays, eachDay, fmtHM, isWeekend, weekday } from './date';
 import type { Holiday, PhaseId, PlanTask, SchoolCalendar, Settings, Track, WrongNote } from './types';
 
+/** 단계 이름 (12/15 이전은 연습 기간) */
+export const phaseLabel = (d: string, ph: PhaseId) => (d < PLAN_START ? '연습 기간' : PHASE_LABEL[ph]);
+
 export const PHASE_LABEL: Record<PhaseId, string> = {
   winter: '겨울방학',
   sem1: '1학기',

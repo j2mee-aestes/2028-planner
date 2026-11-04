@@ -2,7 +2,10 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { DayDetail } from './components/DayDetail';
 import { IconCalendar, IconChart, IconScore, IconSettings, IconToday } from './components/icons';
+import { FocusTimer } from './components/FocusTimer';
+import { PracticeReset } from './components/PracticeReset';
 import { PostponedSheet, usePostponed } from './components/PostponedSheet';
+import { Toaster } from './components/ui';
 import { diffDays, kstToday, weekday } from './lib/date';
 import { ALLOWED_EMAIL, auth, firebaseEnabled, firestoreBackend, localBackend, login, logout } from './lib/firebase';
 import { StoreProvider, useStore } from './lib/store';
@@ -70,6 +73,9 @@ function Shell({ email }: { email?: string | null }) {
         )}
       </main>
       <PostponedSheet open={satPrompt} onClose={() => setSatPrompt(false)} saturday />
+      {loaded && <FocusTimer />}
+      <PracticeReset />
+      <Toaster />
       <nav className="glass fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 grid grid-cols-5 rounded-[26px] border border-white/50 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:border-zinc-700/50 md:hidden">
         {NAV.map(([v, l, Icon]) => (
           <button key={v} onClick={() => setView(v)}

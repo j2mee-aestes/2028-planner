@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fmtHM, kstToday } from '../lib/date';
 import type { DayTask } from '../lib/stats';
 import { useStore } from '../lib/store';
+import { elapsedMs } from '../lib/timer';
 import { subjectOf } from '../seed/subjects';
 import { IconClose } from './icons';
 
@@ -45,7 +46,7 @@ export function Timeline({ date, tasks }: { date: string; tasks: DayTask[] }) {
   const run = data.settings.runningTimer;
   const logs = [
     ...rec.logs.filter((l) => l.start && l.end).map((l) => ({ id: l.id, subject: l.subject, s: kstMin(l.start!), e: kstMin(l.start!) + l.min, live: false })),
-    ...(run && date === kstToday() ? [{ id: 'live', subject: run.subject, s: kstMin(run.startedAt), e: kstMin(run.startedAt) + Math.max(1, Math.round((now - run.startedAt) / 60000)), live: true }] : []),
+    ...(run && date === kstToday() ? [{ id: 'live', subject: run.subject, s: kstMin(run.firstStart ?? run.startedAt), e: kstMin(run.firstStart ?? run.startedAt) + Math.max(1, Math.round(elapsedMs(run, now) / 60000)), live: true }] : []),
   ].map((l) => ({ ...l, s: l.s < START * 60 && l.s < 120 ? l.s + 1440 : l.s, e: l.s < START * 60 && l.s < 120 ? l.e + 1440 : l.e }));
   const aBlocks = layout(logs, (l) => [l.s, l.e], (l) => l.id);
   const untimed = rec.logs.filter((l) => !l.start).reduce((a, l) => a + l.min, 0);

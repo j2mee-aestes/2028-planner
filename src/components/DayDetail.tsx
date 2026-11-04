@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTaskActions } from '../lib/actions';
 import { fmtHM, fmtMin, isWeekend, kstToday, prettyDate, uid, weekday } from '../lib/date';
-import { PHASE_LABEL } from '../lib/plan';
+import { phaseLabel } from '../lib/plan';
 import { dayMinutes, overdue, tasksOf } from '../lib/stats';
 import { useStore } from '../lib/store';
 import type { TaskKind } from '../lib/types';
@@ -63,7 +63,7 @@ export function DayDetail({ date }: { date: string }) {
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg">{prettyDate(date)}</h2>
-          <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">{PHASE_LABEL[plan.phase(date)]}</span>
+          <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">{phaseLabel(date, plan.phase(date))}</span>
           {hol && <span className="text-xs text-red-500">{hol}</span>}
           {date === today && <span className="rounded bg-zinc-900 px-1.5 py-0.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900">오늘</span>}
         </div>

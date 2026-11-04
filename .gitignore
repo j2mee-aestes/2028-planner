@@ -6,3 +6,4 @@ dev-dist
 .firebase
 *.log
 .push
+dist-local

@@ -4,7 +4,7 @@ import { WeekBoard } from '../components/WeekBoard';
 import { IconChevronLeft, IconChevronRight } from '../components/icons';
 import { Segmented, Sheet } from '../components/ui';
 import { addDays, addMonths, eachDay, endOfMonth, fmtMin, isWeekend, kstToday, prettyDate, startOfMonth, startOfWeek, weekday } from '../lib/date';
-import { PHASE_LABEL } from '../lib/plan';
+import { phaseLabel } from '../lib/plan';
 import { dayMinutes, tasksOf } from '../lib/stats';
 import { useStore } from '../lib/store';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
@@ -188,7 +188,7 @@ function PhaseBar({ d }: { d: string }) {
   const exam = data.settings.school.exams.find((e) => d >= addDays(e.start, -data.settings.school.examLeadDays) && d <= e.end);
   return (
     <div className="mb-2 text-xs muted">
-      {PHASE_LABEL[ph]}
+      {phaseLabel(d, ph)}
       {exam && ` · ${exam.name} 대비 (시험 ${prettyDate(exam.start)}~${prettyDate(exam.end)})`}
     </div>
   );

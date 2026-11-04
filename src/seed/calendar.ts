@@ -4,6 +4,12 @@ export const PLAN_START = '2026-12-15';
 export const PLAN_END = '2027-11-17'; // 수능 전날
 export const EXAM_DATE = '2027-11-18'; // 2028학년도 수능 (교육부 2025-06-02 발표)
 
+/** 연습 기간: 이 날부터 12/14 까지 통계(잔디·연속·누적 등)를 미리 써보고, 12/15 부터는 새로 집계 */
+export const PRACTICE_START = '2026-11-01';
+/** 통계 집계 시작일: 연습 기간엔 PRACTICE_START, 12/15 부터는 PLAN_START (연습 기록은 집계에서 빠짐) */
+export const statsStart = (today: string) => (today < PLAN_START ? PRACTICE_START : PLAN_START);
+export const inPractice = (today: string) => today < PLAN_START;
+
 // 법정 공휴일·대체공휴일 (2026-12 ~ 2027-11). 출처: 우주항공청 2027 월력요항 보도 기반 정리.
 // 임시공휴일이 생기면 앱 설정 화면에서 추가하거나 여기에 추가.
 export const HOLIDAYS: Holiday[] = [

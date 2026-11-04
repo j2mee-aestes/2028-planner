@@ -146,3 +146,28 @@ export function Disclosure({ title, children, className = '' }: { title: ReactNo
     </div>
   );
 }
+
+const TOAST_EVENT = 'planner:toast';
+/** 화면 아래에 잠깐 뜨는 안내 */
+export const toast = (msg: string) => window.dispatchEvent(new CustomEvent(TOAST_EVENT, { detail: msg }));
+
+export function Toaster() {
+  const [msg, setMsg] = useState<string | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    const f = (e: Event) => {
+      setMsg((e as CustomEvent<string>).detail);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setMsg(null), 2600);
+    };
+    window.addEventListener(TOAST_EVENT, f);
+    return () => window.removeEventListener(TOAST_EVENT, f);
+  }, []);
+  if (!msg) return null;
+  return createPortal(
+    <div key={msg} role="status" className="toast-in glass fixed left-1/2 top-[max(1rem,env(safe-area-inset-top))] z-[70] -translate-x-1/2 rounded-full border border-white/50 px-5 py-2.5 text-sm shadow-[0_8px_30px_rgba(0,0,0,0.14)] dark:border-zinc-700/50">
+      {msg}
+    </div>,
+    document.body,
+  );
+}

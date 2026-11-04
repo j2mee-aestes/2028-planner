@@ -48,6 +48,7 @@ export interface Backend {
   subscribe(cb: (patch: Partial<AppData>) => void): () => void;
   saveSettings(s: Settings): void;
   saveDay(date: string, d: DayRecord): void;
+  deleteDay(date: string): void;
   saveScore(s: Score): void;
   deleteScore(id: string): void;
   saveWrong(w: WrongNote): void;
@@ -82,6 +83,7 @@ export function firestoreBackend(uid: string): Backend {
     },
     saveSettings: (s) => void setDoc(doc(db!, `${base}/meta/settings`), clean(s)).catch(report),
     saveDay: (date, d) => void setDoc(doc(db!, `${base}/days/${date}`), clean(d)).catch(report),
+    deleteDay: (date) => void deleteDoc(doc(db!, `${base}/days/${date}`)).catch(report),
     saveScore: (s) => void setDoc(doc(db!, `${base}/scores/${s.id}`), clean(s)).catch(report),
     deleteScore: (id) => void deleteDoc(doc(db!, `${base}/scores/${id}`)).catch(report),
     saveWrong: (w) => void setDoc(doc(db!, `${base}/wrongs/${w.id}`), clean(w)).catch(report),
@@ -115,6 +117,7 @@ export function localBackend(): Backend {
     subscribe(cb) { cb(read()); return () => {}; },
     saveSettings: (s) => write((d) => (d.settings = s)),
     saveDay: (date, v) => write((d) => ((d.days ??= {})[date] = v)),
+    deleteDay: (date) => write((d) => { if (d.days) delete d.days[date]; }),
     saveScore: (s) => write((d) => ((d.scores ??= {})[s.id] = s)),
     deleteScore: (id) => write((d) => { if (d.scores) delete d.scores[id]; }),
     saveWrong: (w) => write((d) => ((d.wrongs ??= {})[w.id] = w)),

@@ -64,7 +64,7 @@ export function minutesBySubject(days: Record<string, DayRecord>, from: string, 
 }
 
 /** 월별 모의고사 완료 수 (체크한 날짜 기준) */
-export function mockCountByMonth(data: AppData, plan: Plan) {
+export function mockCountByMonth(data: AppData, plan: Plan, from = '0000') {
   const r: Record<string, Record<string, number>> = {};
   for (const [date, d] of Object.entries(data.days)) {
     const customKind = Object.fromEntries((d.custom ?? []).map((c) => [c.id, c]));
@@ -74,6 +74,7 @@ export function mockCountByMonth(data: AppData, plan: Plan) {
       const kind = t?.kind ?? c?.kind;
       const subject = t?.subject ?? c?.subject;
       if (kind !== 'mock' || !subject || d.edits?.[id]?.deleted) continue;
+      if ((checkedOn || date) < from) continue; // 연습 기간 기록 제외
       const m = monthKey(checkedOn || date);
       (r[m] ??= {})[subject] = (r[m][subject] ?? 0) + 1;
     }

@@ -2,13 +2,13 @@ import { addDays, diffDays, eachDay } from './date';
 import type { Plan } from './plan';
 import { dayMinutes, tasksOf } from './stats';
 import type { AppData, PlanTask } from './types';
-import { PLAN_START } from '../seed/calendar';
+import { statsStart } from '../seed/calendar';
 
 /** 연속 공부일: 공부 금지일은 건너뜀(끊기지도, 세지도 않음). 오늘은 아직 0분이어도 끊지 않음 */
 export function streaks(data: AppData, plan: Plan, today: string) {
   let best = 0, run = 0, studied = 0, studyDays = 0;
-  const end = today < PLAN_START ? PLAN_START : today;
-  for (const d of eachDay(PLAN_START, end)) {
+  const from = statsStart(today);
+  for (const d of eachDay(from, today)) {
     if (d > today) break;
     if (plan.off.has(d)) continue;
     const m = dayMinutes(data.days[d]);

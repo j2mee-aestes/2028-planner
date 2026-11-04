@@ -32,6 +32,8 @@ interface Ctx {
   saveWrong: (w: WrongNote) => void;
   deleteWrong: (id: string) => void;
   replaceAll: (d: AppData) => Promise<void>;
+  /** 이 날짜 이전의 일별 기록·성적·오답노트를 모두 삭제 (연습 기간 정리) */
+  clearBefore: (date: string) => void;
 }
 
 const StoreCtx = createContext<Ctx>(null as unknown as Ctx);
@@ -97,6 +99,20 @@ export function StoreProvider({ backend, children }: { backend: Backend; childre
     backend.deleteWrong(id);
   }, [backend]);
 
+  const clearBefore = useCallback((date: string) => {
+    const cur = ref.current;
+    for (const k of Object.keys(cur.days)) if (k < date) backend.deleteDay(k);
+    for (const s of Object.values(cur.scores)) if (s.date < date) backend.deleteScore(s.id);
+    for (const w of Object.values(cur.wrongs)) if (w.date < date) backend.deleteWrong(w.id);
+    const keep = <T,>(o: Record<string, T>, f: (k: string, v: T) => boolean) => Object.fromEntries(Object.entries(o).filter(([k, v]) => f(k, v)));
+    setData((d) => ({
+      ...d,
+      days: keep(d.days, (k) => k >= date),
+      scores: keep(d.scores, (_, v) => v.date >= date),
+      wrongs: keep(d.wrongs, (_, v) => v.date >= date),
+    }));
+  }, [backend]);
+
   const replaceAll = useCallback(async (d: AppData) => {
     const next = { settings: normSettings(d.settings), days: d.days ?? {}, scores: d.scores ?? {}, wrongs: d.wrongs ?? {} };
     await backend.replaceAll(next);
@@ -112,7 +128,7 @@ export function StoreProvider({ backend, children }: { backend: Backend; childre
   const day = useCallback((date: string) => normDay(data.days[date]), [data.days]);
 
   return (
-    <StoreCtx.Provider value={{ data, plan, loaded, day, updateDay, updateSettings, saveScore, deleteScore, saveWrong, deleteWrong, replaceAll }}>
+    <StoreCtx.Provider value={{ data, plan, loaded, day, updateDay, updateSettings, saveScore, deleteScore, saveWrong, deleteWrong, replaceAll, clearBefore }}>
       {children}
     </StoreCtx.Provider>
   );

@@ -63,6 +63,13 @@ button { -webkit-user-select: none; user-select: none; touch-action: manipulatio
   .sheet-panel.closing { animation: pop-out 0.2s ease both; }
 }
 
+/* 집중 타이머 · 토스트 */
+@keyframes focus-in { from { opacity: 0; transform: scale(1.04); } }
+.focus-in { animation: focus-in 0.45s var(--ease-spring) both; }
+.focus-dialog { animation: pop-in 0.32s var(--ease-spring) both; }
+@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -12px); } }
+.toast-in { animation: toast-in 0.35s var(--ease-spring) both; }
+
 /* 체크 */
 @keyframes check-pop { 0% { transform: scale(0.7); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
 @keyframes check-draw { from { stroke-dashoffset: 16; } }

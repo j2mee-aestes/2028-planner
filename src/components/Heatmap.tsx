@@ -3,7 +3,7 @@ import { addDays, eachDay, fmtHM, kstToday, prettyDate, startOfWeek } from '../l
 import { streaks } from '../lib/insights';
 import { dayMinutes } from '../lib/stats';
 import { useStore } from '../lib/store';
-import { PLAN_END, PLAN_START } from '../seed/calendar';
+import { PLAN_END, statsStart } from '../seed/calendar';
 
 // 단일 색조(모노톤) 순차 단계: 0, ~2h, ~4h, ~6h, 6h+
 const LEVELS = [0, 120, 240, 360];
@@ -16,11 +16,12 @@ export function Heatmap() {
   const box = useRef<HTMLDivElement>(null);
   const s = useMemo(() => streaks(data, plan, today), [data, plan, today]);
 
+  const from = statsStart(today);
   const weeks = useMemo(() => {
     const out: string[][] = [];
-    for (let w = startOfWeek(PLAN_START); w <= PLAN_END; w = addDays(w, 7)) out.push([...eachDay(w, addDays(w, 6))]);
+    for (let w = startOfWeek(from); w <= PLAN_END; w = addDays(w, 7)) out.push([...eachDay(w, addDays(w, 6))]);
     return out;
-  }, []);
+  }, [from]);
 
   useEffect(() => {
     const el = box.current?.querySelector<HTMLElement>('[data-today]');
@@ -48,9 +49,9 @@ export function Heatmap() {
         <div className="flex gap-[3px]">
           {weeks.map((wk) => (
             <div key={wk[0]} className="flex flex-col gap-[3px]">
-              <div className="h-3 text-[9px] leading-3 muted">{wk.some((d) => d.endsWith('-01') || d === PLAN_START) ? `${Number((wk.find((d) => d.endsWith('-01')) ?? PLAN_START).slice(5, 7))}월` : ''}</div>
+              <div className="h-3 whitespace-nowrap text-[9px] leading-3 muted">{wk.some((d) => d.endsWith('-01') || d === from) ? `${Number((wk.find((d) => d.endsWith('-01')) ?? from).slice(5, 7))}월` : ''}</div>
               {wk.map((d) => {
-                const out = d < PLAN_START || d > PLAN_END;
+                const out = d < from || d > PLAN_END;
                 const m = dayMinutes(data.days[d]);
                 const off = plan.off.has(d);
                 return (

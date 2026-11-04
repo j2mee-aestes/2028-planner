@@ -8,7 +8,7 @@ import { WeeklyReview } from '../components/WeeklyReview';
 import { addDays, addMonths, eachDay, endOfMonth, fmtHM, fmtMin, kstToday, monthKey, startOfMonth, startOfWeek } from '../lib/date';
 import { minutesBySubject, mockCountByMonth, tasksOf } from '../lib/stats';
 import { useStore } from '../lib/store';
-import { PLAN_END, PLAN_START } from '../seed/calendar';
+import { inPractice, PLAN_END, PLAN_START, statsStart } from '../seed/calendar';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
 
 type Range = 'day' | 'week' | 'month';
@@ -37,12 +37,13 @@ export function StatsView() {
   const today = kstToday();
   const [range, setRange] = useState<Range>('day');
   const [rw, setRw] = useState(() => startOfWeek(kstToday()));
+  const from = statsStart(today);
   const subs = SUBJECTS.filter((s) => s.active && (s.id !== 'etc' || Object.values(data.days).some((d) => d.logs?.some((l) => l.subject === 'etc'))));
 
   const buckets: { label: string; from: string; to: string }[] = [];
   if (range === 'day') for (let i = 13; i >= 0; i--) { const d = addDays(today, -i); buckets.push({ label: d.slice(5).replace('-', '/'), from: d, to: d }); }
   if (range === 'week') for (let i = 11; i >= 0; i--) { const s = addDays(startOfWeek(today), -7 * i); buckets.push({ label: s.slice(5).replace('-', '/') + '~', from: s, to: addDays(s, 6) }); }
-  if (range === 'month') for (let m = startOfMonth(PLAN_START); m <= PLAN_END; m = addMonths(m, 1)) buckets.push({ label: `${Number(m.slice(5, 7))}월`, from: m, to: endOfMonth(m) });
+  if (range === 'month') for (let m = startOfMonth(from); m <= PLAN_END; m = addMonths(m, 1)) buckets.push({ label: `${Number(m.slice(5, 7))}월`, from: m, to: endOfMonth(m) });
 
   const chart = buckets.map((b) => {
     const r = minutesBySubject(data.days, b.from, b.to);
@@ -61,20 +62,25 @@ export function StatsView() {
     return n ? Math.round((done / n) * 100) : 0;
   };
   const monthBySubject = minutesBySubject(data.days, startOfMonth(today), endOfMonth(today));
-  const mocks = mockCountByMonth(data, plan);
+  const mocks = mockCountByMonth(data, plan, from);
   const mockMonths: string[] = [];
-  for (let m = startOfMonth(PLAN_START); m <= PLAN_END; m = addMonths(m, 1)) mockMonths.push(monthKey(m));
+  for (let m = startOfMonth(from); m <= PLAN_END; m = addMonths(m, 1)) mockMonths.push(monthKey(m));
   const mockSubs = ['kor', 'eng', 'math', 'soc', 'sci', 'hist'];
 
   return (
     <div className="space-y-4">
       <h1 className="text-lg">통계</h1>
+      {inPractice(today) && (
+        <div className="rounded-2xl bg-zinc-900 px-4 py-3 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900">
+          연습 기간이에요 · 지금 기록은 미리 써보는 용도이고, {Number(PLAN_START.slice(5, 7))}/{Number(PLAN_START.slice(8))}부터 통계가 새로 시작돼요.
+        </div>
+      )}
       <Heatmap />
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="오늘" value={fmtMin(sumRange(today, today))} />
         <Stat label="이번 주" value={fmtMin(sumRange(ws, addDays(ws, 6)))} sub={`완료율 ${completion(ws, today)}%`} />
         <Stat label="이번 달" value={fmtMin(sumRange(startOfMonth(today), endOfMonth(today)))} sub={`완료율 ${completion(startOfMonth(today), today)}%`} />
-        <Stat label="누적" value={fmtMin(sumRange(PLAN_START, PLAN_END))} />
+        <Stat label="누적" value={fmtMin(sumRange(from, PLAN_END))} sub={inPractice(today) ? '연습 기간' : undefined} />
       </div>
 
       <section className="card p-3">

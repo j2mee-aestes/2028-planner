@@ -93,7 +93,10 @@ export interface Settings {
   /** 규칙상 금지일이지만 공부일로 강제 지정 */
   extraStudy: string[];
   targets: { weekday: number; weekend: number }; // 분
-  runningTimer: { subject: SubjectId; startedAt: number } | null;
+  /** 진행 중 타이머. 일시정지 시 accum 에 누적하고 pausedAt 기록, 재개 시 startedAt 갱신 */
+  runningTimer: { subject: SubjectId; startedAt: number; firstStart?: number; accum?: number; pausedAt?: number | null } | null;
+  /** 12/15 연습 기록 정리 완료 여부 */
+  practiceReset?: boolean;
   /** 휴대폰 알림 (GitHub Actions 가 읽어서 발송) */
   push?: { tokens: string[]; morning: boolean; saturday: boolean };
 }
