@@ -1,0 +1,36 @@
+name: 배포
+
+# 수동 실행 전용: GitHub Actions 탭의 "Run workflow" 또는 Claude 가 요청 시 실행
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: 테스트
+        run: npm test
+      - name: 빌드
+        run: npm run build
+      - name: 서비스 계정 준비
+        run: |
+          if [ -z "$SA" ]; then echo "::error::GitHub Secret FIREBASE_SERVICE_ACCOUNT 가 없습니다 (README 참고)"; exit 1; fi
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Firebase 배포 (웹사이트 + 보안 규칙)
+        run: npx --yes firebase-tools@13.29.1 deploy --only hosting,firestore:rules --project planner-eff14 --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+      - name: 결과
+        run: echo "배포 완료 → https://planner-eff14.web.app ($(git rev-parse --short HEAD))" >> "$GITHUB_STEP_SUMMARY"
