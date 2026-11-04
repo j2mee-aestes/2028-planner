@@ -17,12 +17,39 @@ export function tasksOf(plan: Plan, date: string, day: DayRecord): DayTask[] {
   const out: DayTask[] = [];
   for (const t of plan.byDate[date] ?? []) {
     const e = day.edits[t.id];
-    if (e?.deleted) continue;
+    if (e?.deleted || e?.postponed || e?.movedTo) continue;
     out.push({ id: t.id, subject: t.subject, title: e?.title ?? t.title, kind: t.kind, custom: false, done: !!day.checks[t.id], plan: t });
   }
   for (const c of day.custom)
-    out.push({ id: c.id, subject: c.subject, title: c.title, kind: c.kind, custom: true, done: !!day.checks[c.id] });
+    if (!c.postponed) out.push({ id: c.id, subject: c.subject, title: c.title, kind: c.kind, custom: true, done: !!day.checks[c.id] });
   return out;
+}
+
+export interface PostponedItem {
+  id: string;
+  date: string; // 원래 날짜
+  at: string; // 미룬 날
+  title: string;
+  subject: SubjectId;
+  kind: TaskKind;
+  custom: boolean;
+}
+
+/** 미룬 할 일 전체 (미룬 날짜 오래된 순) */
+export function postponedList(plan: Plan, data: AppData): PostponedItem[] {
+  const out: PostponedItem[] = [];
+  for (const [date, d] of Object.entries(data.days)) {
+    for (const [id, e] of Object.entries(d.edits ?? {})) {
+      if (!e.postponed || e.deleted || e.movedTo) continue;
+      const t = plan.byId[id];
+      const snap = e.snap ?? (t && { title: t.title, subject: t.subject, kind: t.kind });
+      if (!snap) continue;
+      out.push({ id, date, at: e.postponed, title: e.title ?? snap.title, subject: snap.subject, kind: snap.kind, custom: false });
+    }
+    for (const c of d.custom ?? [])
+      if (c.postponed) out.push({ id: c.id, date, at: c.postponed, title: c.title, subject: c.subject, kind: c.kind, custom: true });
+  }
+  return out.sort((a, b) => a.at.localeCompare(b.at) || a.date.localeCompare(b.date));
 }
 
 export const dayMinutes = (d?: DayRecord) => (d?.logs ?? []).reduce((a, l) => a + l.min, 0);

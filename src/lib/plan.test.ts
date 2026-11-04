@@ -77,3 +77,24 @@ describe('커리 생성', () => {
     expect(new Set(all.map((t) => t.id)).size).toBe(all.length);
   });
 });
+
+import { postponedList, tasksOf } from './stats';
+describe('미루기', () => {
+  const p = generatePlan(S);
+  const date = '2027-01-12';
+  const t = p.byDate[date][0];
+  const day = { checks: {}, edits: { [t.id]: { postponed: '2027-01-12', snap: { title: t.title, subject: t.subject, kind: t.kind } } },
+    custom: [{ id: 'c-1', subject: 'etc', title: '내 할 일', kind: 'study' as const, postponed: '2027-01-13' }], logs: [] };
+  const data = { settings: S, days: { [date]: day }, scores: {} };
+  it('미룬 항목은 그날 목록에서 빠지고 미룬 목록에 나옴', () => {
+    expect(tasksOf(p, date, day).some((x) => x.id === t.id || x.id === 'c-1')).toBe(false);
+    expect(postponedList(p, data).map((x) => x.id)).toEqual([t.id, 'c-1']);
+  });
+  it('완전 삭제·이동한 항목은 미룬 목록에서 빠짐', () => {
+    const d2 = { ...day, edits: { [t.id]: { deleted: true } }, custom: [] };
+    expect(postponedList(p, { ...data, days: { [date]: d2 } })).toHaveLength(0);
+    const d3 = { ...day, edits: { [t.id]: { movedTo: '2027-01-14' } }, custom: [] };
+    expect(postponedList(p, { ...data, days: { [date]: d3 } })).toHaveLength(0);
+    expect(tasksOf(p, date, d3).some((x) => x.id === t.id)).toBe(false);
+  });
+});

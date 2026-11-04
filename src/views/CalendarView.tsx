@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { DayDetail } from '../components/DayDetail';
+import { WeekBoard } from '../components/WeekBoard';
 import { IconChevronLeft, IconChevronRight } from '../components/icons';
-import { Dot, Segmented, Sheet } from '../components/ui';
+import { Segmented, Sheet } from '../components/ui';
 import { addDays, addMonths, eachDay, endOfMonth, fmtMin, isWeekend, kstToday, prettyDate, startOfMonth, startOfWeek, weekday } from '../lib/date';
 import { PHASE_LABEL } from '../lib/plan';
 import { dayMinutes, tasksOf } from '../lib/stats';
@@ -48,7 +49,7 @@ export function CalendarView() {
 
   const pick = (d: string) => {
     setSelected(d);
-    if (!wide && mode !== 'day') setSheet(true);
+    if ((!wide && mode !== 'day') || mode === 'week') setSheet(true);
   };
   const move = (n: number) =>
     setCursor((c) => (mode === 'month' ? addMonths(c, n) : addDays(c, mode === 'week' ? 7 * n : n)));
@@ -147,35 +148,13 @@ export function CalendarView() {
     const total = ds.reduce((a, d) => a + sum(d).min, 0);
     const target = ds.reduce((a, d) => a + (plan.off.has(d) ? 0 : isWeekend(d) ? data.settings.targets.weekend : data.settings.targets.weekday), 0);
     body = (
-      <div className="space-y-2">
-        <div className="card flex items-baseline gap-2 p-3">
-          <span className="label">주간 합계</span>
-          <span className="text-xl tabular-nums">{fmtMin(total)}</span>
-          <span className="text-sm muted">/ 목표 {fmtMin(target)} ({target ? Math.round((total / target) * 100) : 0}%)</span>
+      <div>
+        <div className="mb-3 flex items-baseline gap-2 text-sm">
+          <span className="muted">이번 주</span>
+          <span className="text-lg tabular-nums">{fmtMin(total)}</span>
+          <span className="muted">/ 목표 {fmtMin(target)} · {target ? Math.round((total / target) * 100) : 0}%</span>
         </div>
-        {ds.map((d) => {
-          const s = sum(d);
-          const done = s.tasks.filter((t) => t.done).length;
-          return (
-            <button key={d} onClick={() => pick(d)}
-              className={`card press flex w-full items-center gap-3 p-3.5 text-left ${selected === d && wide ? 'ring-2 ring-zinc-900 dark:ring-zinc-100' : ''} ${s.off ? 'opacity-60' : ''}`}>
-              <div className={`w-16 text-sm ${d === today ? 'underline underline-offset-4' : weekday(d) === 0 || s.hol ? 'text-rose-400' : ''}`}>
-                {prettyDate(d)}
-              </div>
-              <div className="flex-1 space-y-1">
-                <div className="flex flex-wrap gap-2 text-xs">
-                  {s.off ? <span className="muted">휴 · {s.off}</span> : s.subj.map((x) => (
-                    <span key={x.id} className="inline-flex items-center gap-1"><Dot subject={x.id} filled={x.done === x.n} />{x.done}/{x.n}</span>
-                  ))}
-                </div>
-                <div className="h-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                  <div className="h-full bg-zinc-900 dark:bg-zinc-100" style={{ width: `${s.tasks.length ? (done / s.tasks.length) * 100 : 0}%` }} />
-                </div>
-              </div>
-              <div className="w-12 text-right text-sm tabular-nums">{fmtMin(s.min)}</div>
-            </button>
-          );
-        })}
+        <WeekBoard days={ds} today={today} onOpen={(d) => { setSelected(d); setSheet(true); }} />
       </div>
     );
   } else {
@@ -189,12 +168,12 @@ export function CalendarView() {
         <PhaseBar d={mode === 'day' ? cursor : selected} />
         {body}
       </div>
-      {wide && mode !== 'day' && (
+      {wide && mode === 'month' && (
         <aside className="w-[26rem] shrink-0">
           <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto pr-1"><DayDetail date={selected} /></div>
         </aside>
       )}
-      {!wide && (
+      {(!wide || mode === 'week') && (
         <Sheet open={sheet} onClose={() => setSheet(false)} title="">
           <DayDetail date={selected} />
         </Sheet>

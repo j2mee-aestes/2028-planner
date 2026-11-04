@@ -2,7 +2,8 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { DayDetail } from './components/DayDetail';
 import { IconCalendar, IconChart, IconScore, IconSettings, IconToday } from './components/icons';
-import { diffDays, kstToday } from './lib/date';
+import { PostponedSheet, usePostponed } from './components/PostponedSheet';
+import { diffDays, kstToday, weekday } from './lib/date';
 import { ALLOWED_EMAIL, auth, firebaseEnabled, firestoreBackend, localBackend, login, logout } from './lib/firebase';
 import { StoreProvider, useStore } from './lib/store';
 import { EXAM_DATE } from './seed/calendar';
@@ -26,6 +27,18 @@ function Shell({ email }: { email?: string | null }) {
   const today = kstToday();
   useEffect(() => { try { sessionStorage.setItem('view', view); } catch {} }, [view]);
   const dday = diffDays(today, EXAM_DATE);
+
+  // 매주 토요일: 미룬 할 일이 있으면 하루 한 번 자동으로 정리 창 띄우기
+  const postponed = usePostponed();
+  const [satPrompt, setSatPrompt] = useState(false);
+  useEffect(() => {
+    if (!loaded || weekday(today) !== 6 || postponed.length === 0) return;
+    try {
+      if (localStorage.getItem('postponed-prompt') === today) return;
+      localStorage.setItem('postponed-prompt', today);
+    } catch {}
+    setSatPrompt(true);
+  }, [loaded, today, postponed.length]);
 
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl">
@@ -56,6 +69,7 @@ function Shell({ email }: { email?: string | null }) {
           </div>
         )}
       </main>
+      <PostponedSheet open={satPrompt} onClose={() => setSatPrompt(false)} saturday />
       <nav className="glass fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 grid grid-cols-5 rounded-[26px] border border-white/50 p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:border-zinc-700/50 md:hidden">
         {NAV.map(([v, l, Icon]) => (
           <button key={v} onClick={() => setView(v)}

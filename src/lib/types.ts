@@ -101,6 +101,20 @@ export interface CustomTask {
   subject: SubjectId;
   title: string;
   kind: TaskKind;
+  /** 미룬 날짜(KST). 있으면 그날 목록에서 빠지고 '미룬 할 일'에 표시 */
+  postponed?: string;
+}
+
+export interface TaskEdit {
+  title?: string;
+  /** 완전 삭제 */
+  deleted?: boolean;
+  /** 미룬 날짜(KST) */
+  postponed?: string;
+  /** 미룬 항목을 다른 날짜로 옮김 (그 날짜에 직접 추가 항목으로 생성됨) */
+  movedTo?: string;
+  /** 미룰 때의 제목·과목 (커리가 바뀌어도 목록에 남도록) */
+  snap?: { title: string; subject: SubjectId; kind: TaskKind };
 }
 
 export interface TimeLog {
@@ -115,7 +129,7 @@ export interface TimeLog {
 export interface DayRecord {
   /** taskId -> 체크한 날짜(KST) */
   checks: Record<string, string>;
-  edits: Record<string, { title?: string; deleted?: boolean }>;
+  edits: Record<string, TaskEdit>;
   custom: CustomTask[];
   logs: TimeLog[];
   memo?: string;

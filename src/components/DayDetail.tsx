@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
-import { fmtHM, fmtMin, isWeekend, kstToday, prettyDate, uid } from '../lib/date';
+import { useTaskActions } from '../lib/actions';
+import { fmtHM, fmtMin, isWeekend, kstToday, prettyDate, uid, weekday } from '../lib/date';
 import { PHASE_LABEL } from '../lib/plan';
-import { dayMinutes, overdue, tasksOf, type DayTask } from '../lib/stats';
+import { dayMinutes, overdue, tasksOf } from '../lib/stats';
 import { useStore } from '../lib/store';
-import type { Score, TaskKind } from '../lib/types';
+import type { TaskKind } from '../lib/types';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
-import { ScoreModal } from './ScoreModal';
+import { PostponedSheet, usePostponed } from './PostponedSheet';
+import { TaskRow } from './TaskRow';
 import { Timer } from './Timer';
-import { IconPencil, IconPin, IconPlus, IconTimer, IconTrash, IconUndo, IconClose } from './icons';
+import { IconChevronRight, IconClose, IconPin, IconPlus, IconTimer } from './icons';
 import { Check, Disclosure, Dot, inkVars, SubjectSelect } from './ui';
 
 export function DayDetail({ date }: { date: string }) {
@@ -19,48 +21,10 @@ export function DayDetail({ date }: { date: string }) {
   const target = isWeekend(date) ? data.settings.targets.weekend : data.settings.targets.weekday;
   const off = plan.off.get(date);
   const hol = plan.holidays.get(date);
-  const [score, setScore] = useState<Partial<Score> | null>(null);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [editText, setEditText] = useState('');
   const late = useMemo(() => (date === today ? overdue(plan, data, today) : []), [date, today, plan, data]);
-
-  const scoreByTask = useMemo(() => {
-    const m: Record<string, Score> = {};
-    for (const s of Object.values(data.scores)) if (s.taskId) m[s.taskId] = s;
-    return m;
-  }, [data.scores]);
-
-  const toggle = (t: DayTask, onDate = date) => {
-    const wasDone = !!day(onDate).checks[t.id];
-    updateDay(onDate, (d) => {
-      const checks = { ...d.checks };
-      if (wasDone) delete checks[t.id];
-      else checks[t.id] = today;
-      return { ...d, checks };
-    });
-    if (!wasDone && t.kind === 'mock' && !scoreByTask[t.id] && ['kor', 'eng', 'math', 'soc', 'sci', 'hist'].includes(t.subject))
-      setScore({ type: 'self', org: t.plan?.org === '사설' ? '사설' : (t.plan?.org ?? '사설'), name: t.title, date: today, taskId: t.id, subjects: { [t.subject]: { wrong: [] } } });
-  };
-
-  const saveEdit = (t: DayTask) => {
-    const title = editText.trim();
-    if (!title) return setEditing(null);
-    updateDay(date, (d) =>
-      t.custom
-        ? { ...d, custom: d.custom.map((c) => (c.id === t.id ? { ...c, title } : c)) }
-        : { ...d, edits: { ...d.edits, [t.id]: { ...d.edits[t.id], title } } },
-    );
-    setEditing(null);
-  };
-  const remove = (t: DayTask) =>
-    updateDay(date, (d) =>
-      t.custom
-        ? { ...d, custom: d.custom.filter((c) => c.id !== t.id) }
-        : { ...d, edits: { ...d.edits, [t.id]: { ...d.edits[t.id], deleted: true } } },
-    );
-  const deletedCount = Object.entries(rec.edits).filter(([id, e]) => e.deleted && plan.byDate[date]?.some((t) => t.id === id)).length;
-  const restore = () =>
-    updateDay(date, (d) => ({ ...d, edits: Object.fromEntries(Object.entries(d.edits).map(([k, v]) => [k, { ...v, deleted: false }])) }));
+  const a = useTaskActions();
+  const postponed = usePostponed();
+  const [showPostponed, setShowPostponed] = useState(false);
 
   // 직접 추가
   const [nSub, setNSub] = useState('kor');
@@ -134,16 +98,28 @@ export function DayDetail({ date }: { date: string }) {
         )}
       </section>
 
+      {postponed.length > 0 && date === today && (
+        <button onClick={() => setShowPostponed(true)}
+          className={`press flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left ${weekday(today) === 6
+            ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : 'card'}`}>
+          <span className="flex-1 text-sm">
+            {weekday(today) === 6 ? `토요일 정리 시간 · 미룬 할 일 ${postponed.length}개를 처리하세요` : `미룬 할 일 ${postponed.length}개`}
+          </span>
+          <IconChevronRight size={18} />
+        </button>
+      )}
+
       {late.length > 0 && (
         <Disclosure className="card px-4 py-3"
           title={<span className="text-sm text-amber-600 dark:text-amber-400">밀린 항목 {late.length}개 · 최근 2주</span>}>
           <ul className="mt-2 space-y-2">
             {late.map((t) => (
               <li key={t.id} className="flex items-center gap-2.5 text-sm">
-                <Check checked={false} onChange={() => toggle(t, t.date)} label={t.title} />
+                <Check checked={false} onChange={() => a.toggle(t, t.date)} label={t.title} />
                 <Dot subject={t.subject} />
                 <span className="flex-1">{t.title}</span>
                 <span className="text-xs muted">{prettyDate(t.date)}</span>
+                <button className="press text-xs muted underline underline-offset-2" onClick={() => a.postpone(t, t.date)}>미루기</button>
               </li>
             ))}
           </ul>
@@ -159,41 +135,10 @@ export function DayDetail({ date }: { date: string }) {
               {bySubject[s.id] ? <span className="font-normal muted">· {fmtHM(bySubject[s.id])}</span> : null}
             </div>
             <ul className="card divide-y divide-zinc-100 dark:divide-zinc-800">
-              {items.map((t) => (
-                <li key={t.id} className="group flex items-start gap-3 px-4 py-3">
-                  <Check checked={t.done} onChange={() => toggle(t)} label={t.title} />
-                  <div className="min-w-0 flex-1">
-                    {editing === t.id ? (
-                      <input autoFocus className="input" value={editText} onChange={(e) => setEditText(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && saveEdit(t)} onBlur={() => saveEdit(t)} />
-                    ) : (
-                      <div className={`text-[15px] leading-snug transition-colors duration-300 ${t.done ? 'muted line-through decoration-zinc-400/60' : ''}`}>
-                        {t.kind === 'mock' && <span className="mr-1.5 rounded-md bg-zinc-100 px-1.5 py-px align-[1px] text-[10px] dark:bg-zinc-800">모고</span>}
-                        {t.title}
-                      </div>
-                    )}
-                    <div className="text-xs muted">
-                      {t.custom ? '직접 추가' : t.plan?.trackTitle}
-                      {t.plan?.estMin ? ` · 약 ${t.plan.estMin}분` : ''}
-                      {t.plan?.tentative ? ' · 미확정' : ''}
-                    </div>
-                    {t.kind === 'mock' && t.done && (
-                      <button className="mt-1 text-xs text-zinc-900 underline underline-offset-2 dark:text-zinc-100"
-                        onClick={() => setScore(scoreByTask[t.id] ?? { type: 'self', name: t.title, taskId: t.id, org: t.plan?.org, subjects: { [t.subject]: { wrong: [] } } })}>
-                        {scoreByTask[t.id] ? `점수 ${scoreByTask[t.id].subjects[t.subject]?.raw ?? '-'}점 · 수정` : '점수 입력'}
-                      </button>
-                    )}
-                  </div>
-                  <div className="-mr-2 flex opacity-60 transition-opacity group-hover:opacity-100">
-                    <button className="icon-btn h-8 w-8" onClick={() => { setEditing(t.id); setEditText(t.title); }} aria-label="수정"><IconPencil size={16} /></button>
-                    <button className="icon-btn h-8 w-8" onClick={() => remove(t)} aria-label="삭제"><IconTrash size={16} /></button>
-                  </div>
-                </li>
-              ))}
+              {items.map((t) => <TaskRow key={t.id} t={t} date={date} a={a} />)}
             </ul>
           </div>
         ))}
-        {deletedCount > 0 && <button className="btn-ghost px-2 text-xs" onClick={restore}><IconUndo size={14} />삭제한 커리 항목 {deletedCount}개 복원</button>}
       </section>
 
       <section className="card space-y-2.5 p-4">
@@ -212,7 +157,8 @@ export function DayDetail({ date }: { date: string }) {
 
       <textarea className="input" rows={2} placeholder="메모" value={rec.memo ?? ''} onChange={(e) => updateDay(date, (d) => ({ ...d, memo: e.target.value }))} />
 
-      {score && <ScoreModal initial={score} onClose={() => setScore(null)} />}
+      {a.scoreModal}
+      <PostponedSheet open={showPostponed} onClose={() => setShowPostponed(false)} saturday={weekday(today) === 6} />
     </div>
   );
 }

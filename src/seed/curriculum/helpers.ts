@@ -20,7 +20,7 @@ export function pastExamUnits(prefix: string): Unit[] {
     for (const m of [3, 5, 7, 10])
       out.push({
         id: `${prefix}-e${y}-${m}`,
-        title: `${y - 1}년 ${m}월 고3 학평 (${y}학년도)${m === 5 ? ' · 해당 연도 4월 시행이면 4월분' : ''}`,
+        title: `${y - 1}년 ${m}월 고3 학평 (${y}학년도)`, // 5월 학평이 없던 해는 4월분으로
         org: '교육청',
       });
   for (let y = 2022; y <= 2027; y++)
