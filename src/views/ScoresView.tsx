@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ScoreModal } from '../components/ScoreModal';
-import { Segmented } from '../components/ui';
+import { inkVars, Segmented } from '../components/ui';
 import { monthKey } from '../lib/date';
 import { useStore } from '../lib/store';
 import type { Score } from '../lib/types';
@@ -56,7 +56,7 @@ export function ScoresView() {
         {Object.entries(byMonth).map(([m, ss]) => (
           <div key={m}>
             <div className="mb-1 text-xs font-semibold muted">{m.replace('-', '년 ')}월 · {ss.length}회</div>
-            <ul className="card divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="card divide-y divide-zinc-100 dark:divide-zinc-800">
               {ss.map((s) => (
                 <li key={s.id}>
                   <button className="w-full px-3 py-2 text-left" onClick={() => setEdit(s)}>
@@ -67,7 +67,7 @@ export function ScoresView() {
                     <div className="mt-0.5 flex flex-wrap gap-x-3 text-xs">
                       {Object.entries(s.subjects).map(([id, v]) => (
                         <span key={id}>
-                          <b style={{ color: subjectOf(id).color }}>{subjectOf(id).short}</b>{' '}
+                          <b className="subj-ink" style={inkVars(id)}>{subjectOf(id).short}</b>{' '}
                           {v.raw ?? '-'}점{v.grade ? ` ${v.grade}등급` : ''}{v.wrong?.length ? ` · 오답 ${v.wrong.length}` : ''}
                         </span>
                       ))}
@@ -123,7 +123,7 @@ export function ScoresView() {
           {top.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
               <span className="muted">자주 틀린 번호</span>
-              {top.map((t) => <span key={t.label} className="rounded bg-slate-100 px-1.5 py-0.5 font-medium dark:bg-slate-800">{t.label}번 ×{t.count}</span>)}
+              {top.map((t) => <span key={t.label} className="rounded bg-zinc-100 px-1.5 py-0.5 font-medium dark:bg-zinc-800">{t.label}번 ×{t.count}</span>)}
             </div>
           )}
         </div>

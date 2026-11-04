@@ -3,7 +3,7 @@ import { kstToday, uid } from '../lib/date';
 import { useStore } from '../lib/store';
 import type { Score, SubjectScore } from '../lib/types';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
-import { Sheet } from './ui';
+import { inkVars, Sheet } from './ui';
 
 const OFFICIAL_SUBJECTS = ['kor', 'math', 'eng', 'soc', 'sci', 'hist'];
 const ORGS = ['평가원', '교육청', '사설', '기타'];
@@ -70,9 +70,9 @@ export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | nul
         {Object.entries(s.subjects).map(([id, v]) => {
           const sub = subjectOf(id);
           return (
-            <div key={id} className="rounded-lg border p-2 dark:border-slate-800">
+            <div key={id} className="rounded-lg border p-2 dark:border-zinc-800">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-bold" style={{ color: sub.color }}>{sub.name}</span>
+                <span className="subj-ink text-sm font-bold" style={inkVars(id)}>{sub.name}</span>
                 <button
                   className="text-xs muted"
                   onClick={() => setS((x) => { const c = { ...x.subjects }; delete c[id]; return { ...x, subjects: c }; })}
@@ -98,8 +98,8 @@ export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | nul
                         <button
                           key={n}
                           onClick={() => toggleWrong(id, n)}
-                          className={`h-7 rounded text-xs tabular-nums ${on ? 'font-bold text-white' : 'bg-slate-100 dark:bg-slate-800'}`}
-                          style={on ? { background: sub.color } : undefined}
+                          className={`h-7 rounded text-xs tabular-nums ${on ? 'font-bold text-white' : 'bg-zinc-100 dark:bg-zinc-800'}`}
+                          style={on ? { background: sub.ink } : undefined}
                         >
                           {n}
                         </button>

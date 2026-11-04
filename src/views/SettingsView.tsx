@@ -35,7 +35,7 @@ function DateList({ title, items, onChange, withName }: {
       </div>
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         {items.map((x) => (
-          <span key={x.date} className="inline-flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-2 pr-1 text-xs dark:bg-slate-800">
+          <span key={x.date} className="inline-flex items-center gap-1 rounded-full bg-zinc-100 py-0.5 pl-2 pr-1 text-xs dark:bg-zinc-800">
             {prettyDate(x.date)}{x.name ? ` ${x.name}` : ''}
             <button className="px-1 muted" onClick={() => onChange(items.filter((y) => y.date !== x.date).map((y) => ({ date: y.date, name: y.name ?? '' })))}>✕</button>
           </span>
@@ -83,7 +83,7 @@ export function SettingsView({ email }: { email?: string | null }) {
         <div className="space-y-2">
           <div className="label">내신 시험</div>
           {school.exams.map((e, i) => (
-            <div key={i} className="grid grid-cols-[1fr_auto] gap-1.5 rounded-lg border p-2 dark:border-slate-800">
+            <div key={i} className="grid grid-cols-[1fr_auto] gap-1.5 rounded-lg border p-2 dark:border-zinc-800">
               <input className="input" value={e.name} onChange={(ev) => setSchool({ ...school, exams: school.exams.map((x, j) => (j === i ? { ...x, name: ev.target.value } : x)) })} />
               <button className="btn-ghost text-red-600" onClick={() => setSchool({ ...school, exams: school.exams.filter((_, j) => j !== i) })}>삭제</button>
               <div className="col-span-2 grid grid-cols-2 gap-1.5">
@@ -133,7 +133,7 @@ export function SettingsView({ email }: { email?: string | null }) {
       <section className="card p-3">
         <h2 className="mb-2 text-sm font-bold">커리 배치 현황</h2>
         <p className="mb-2 text-xs muted">교재·분량 수정은 src/seed/curriculum/*.ts 에서 (README 참고). 미배정이 있으면 기간 안에 다 못 들어간 것입니다.</p>
-        <ul className="divide-y divide-slate-100 text-sm dark:divide-slate-800">
+        <ul className="divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
           {plan.stats.map(({ track, total, assigned, first, last }) => (
             <li key={track.id} className="flex items-center gap-2 py-1.5">
               <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: subjectOf(track.subject).color }} />

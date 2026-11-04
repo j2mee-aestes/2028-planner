@@ -15,12 +15,12 @@ export function ChartTooltip({ active, payload, label, unit = 'min', suffix = ''
   const rows = payload.filter((p: any) => p.value);
   const total = rows.reduce((a: number, p: any) => a + p.value, 0);
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-slate-700 dark:bg-slate-900">
+    <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
       <div className="mb-1 font-semibold">{label}{suffix}{unit === 'min' && total ? ` · ${fmtHM(total * 60)}` : ''}</div>
       {rows.map((p: any) => (
         <div key={p.dataKey} className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
-          <span className="text-slate-600 dark:text-slate-300">{p.name}</span>
+          <span className="text-zinc-600 dark:text-zinc-300">{p.name}</span>
           <span className="ml-auto pl-3 font-medium tabular-nums">{unit === 'min' ? fmtHM(p.value * 60) : p.value}</span>
         </div>
       ))}
@@ -116,12 +116,12 @@ export function StatsView() {
           </thead>
           <tbody>
             {mockMonths.map((m) => (
-              <tr key={m} className={`border-t border-slate-100 dark:border-slate-800 ${m === monthKey(today) ? 'font-bold' : ''}`}>
+              <tr key={m} className={`border-t border-zinc-100 dark:border-zinc-800 ${m === monthKey(today) ? 'font-bold' : ''}`}>
                 <td className="py-1">{m.slice(0, 4)}.{m.slice(5)}</td>
                 {mockSubs.map((id) => <td key={id} className="px-2 text-right">{mocks[m]?.[id] ?? '–'}</td>)}
               </tr>
             ))}
-            <tr className="border-t-2 border-slate-200 font-bold dark:border-slate-700">
+            <tr className="border-t-2 border-zinc-200 font-bold dark:border-zinc-700">
               <td className="py-1">합계</td>
               {mockSubs.map((id) => <td key={id} className="px-2 text-right">{Object.values(mocks).reduce((a, r) => a + (r[id] ?? 0), 0)}</td>)}
             </tr>

@@ -5,7 +5,7 @@ import { addDays, addMonths, eachDay, endOfMonth, fmtMin, isWeekend, kstToday, p
 import { PHASE_LABEL } from '../lib/plan';
 import { dayMinutes, tasksOf } from '../lib/stats';
 import { useStore } from '../lib/store';
-import { SUBJECTS } from '../seed/subjects';
+import { SUBJECTS, subjectOf } from '../seed/subjects';
 
 type Mode = 'month' | 'week' | 'day';
 const WD = ['일', '월', '화', '수', '목', '금', '토'];
@@ -63,7 +63,11 @@ export function CalendarView() {
   const header = (
     <div className="mb-3 flex flex-wrap items-center gap-2">
       <button className="btn-ghost px-2" onClick={() => move(-1)} aria-label="이전">‹</button>
-      <h1 className="min-w-[9rem] text-center text-lg font-bold">{title}</h1>
+      <h1 className="min-w-[9rem] text-center">
+        {mode === 'month' ? (
+          <><span className="text-2xl">{Number(cursor.slice(5, 7))}월</span> <span className="text-sm muted">{cursor.slice(0, 4)}</span></>
+        ) : <span className="text-lg">{title}</span>}
+      </h1>
       <button className="btn-ghost px-2" onClick={() => move(1)} aria-label="다음">›</button>
       <button className="btn-outline" onClick={() => { setCursor(today); setSelected(today); }}>오늘</button>
       <div className="ml-auto">
@@ -77,40 +81,62 @@ export function CalendarView() {
     const first = startOfWeek(startOfMonth(cursor));
     const last = addDays(startOfWeek(endOfMonth(cursor)), 6);
     const m = cursor.slice(0, 7);
+    const all = [...eachDay(first, last)];
+    const weeks = Array.from({ length: all.length / 7 }, (_, i) => all.slice(i * 7, i * 7 + 7));
+    const monthMin = all.filter((d) => d.slice(0, 7) === m).reduce((a, d) => a + sum(d).min, 0);
     body = (
       <div>
-        <div className="grid grid-cols-7 text-center text-xs muted">
-          {WD.map((w, i) => <div key={w} className={`py-1 ${i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : ''}`}>{w}</div>)}
+        <div className="mb-3 text-sm muted">
+          이번 달 <span className="font-bold text-zinc-900 tabular-nums dark:text-zinc-100">{fmtMin(monthMin)}</span>
         </div>
-        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200 dark:border-slate-800 dark:bg-slate-800">
-          {[...eachDay(first, last)].map((d) => {
-            const s = sum(d);
-            const out = d.slice(0, 7) !== m;
-            const red = weekday(d) === 0 || !!s.hol;
-            return (
-              <button
-                key={d}
-                onClick={() => pick(d)}
-                className={`flex min-h-[4.6rem] flex-col items-start gap-1 p-1 text-left sm:min-h-[5.5rem] sm:p-1.5 ${
-                  s.off ? 'bg-slate-100 dark:bg-slate-900/60' : 'bg-white dark:bg-slate-900'
-                } ${out ? 'opacity-40' : ''} ${selected === d && wide ? 'ring-2 ring-inset ring-blue-500' : ''}`}
-              >
-                <div className="flex w-full items-center gap-1">
-                  <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-semibold ${
-                    d === today ? 'bg-blue-600 text-white' : red ? 'text-red-500' : weekday(d) === 6 ? 'text-blue-500' : ''}`}>
-                    {Number(d.slice(8))}
-                  </span>
-                  {s.off && <span className="text-[10px] font-bold muted">휴</span>}
-                  {plan.events[d] && <span className="text-[10px]">📌</span>}
-                </div>
-                <div className="flex flex-wrap gap-0.5">
-                  {s.subj.map((x) => <Dot key={x.id} subject={x.id} filled={x.done === x.n} size={7} />)}
-                </div>
-                {s.min > 0 && <span className="mt-auto text-[10px] font-medium tabular-nums muted sm:text-xs">{fmtMin(s.min)}</span>}
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-7 pb-1 text-center text-xs muted sm:grid-cols-[repeat(7,minmax(0,1fr))_3.5rem]">
+          {WD.map((w, i) => <div key={w} className={i === 0 ? 'text-rose-400' : ''}>{w}</div>)}
+          <div className="hidden sm:block">주간</div>
         </div>
+        {weeks.map((wk) => (
+          <div key={wk[0]} className="grid grid-cols-7 border-t border-zinc-100 dark:border-zinc-800/80 sm:grid-cols-[repeat(7,minmax(0,1fr))_3.5rem]">
+            {wk.map((d) => {
+              const s = sum(d);
+              const out = d.slice(0, 7) !== m;
+              const red = weekday(d) === 0 || !!s.hol;
+              const isSel = selected === d && wide;
+              return (
+                <button
+                  key={d}
+                  onClick={() => pick(d)}
+                  className={`group m-0.5 flex min-h-[4.75rem] flex-col gap-1 rounded-xl p-1.5 text-left transition sm:min-h-[6rem] sm:p-2 ${
+                    isSel ? 'bg-zinc-100 dark:bg-zinc-800' : 'hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  } ${out ? 'opacity-30' : ''}`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span className={`flex h-6 w-6 items-center justify-center rounded-full text-sm ${
+                      d === today ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900' : red ? 'text-rose-400' : ''}`}>
+                      {Number(d.slice(8))}
+                    </span>
+                    {s.off && <span className="text-[10px] muted">휴</span>}
+                  </div>
+                  {plan.events[d] && (
+                    <span className="truncate rounded bg-zinc-100 px-1 text-[10px] text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                      {plan.events[d][0].title.split(' (')[0].split(' ·')[0]}
+                    </span>
+                  )}
+                  {!s.off && s.subj.length > 0 && (
+                    <div className="flex w-full gap-[2px]">
+                      {s.subj.map((x) => (
+                        <span key={x.id} title={`${subjectOf(x.id).name} ${x.done}/${x.n}`} className="h-2 flex-1 rounded-full"
+                          style={x.done === x.n ? { background: subjectOf(x.id).color } : { boxShadow: `inset 0 0 0 1.5px ${subjectOf(x.id).color}`, background: x.done ? `${subjectOf(x.id).color}80` : 'transparent' }} />
+                      ))}
+                    </div>
+                  )}
+                  <span className="mt-auto self-end text-[11px] tabular-nums muted sm:text-xs">{s.min > 0 ? fmtMin(s.min) : ''}</span>
+                </button>
+              );
+            })}
+            <div className="hidden items-end justify-center pb-2 text-xs font-bold tabular-nums sm:flex">
+              {(() => { const t = wk.reduce((a, d) => a + sum(d).min, 0); return t ? fmtMin(t) : <span className="font-normal muted">–</span>; })()}
+            </div>
+          </div>
+        ))}
         <Legend />
       </div>
     );
@@ -131,8 +157,8 @@ export function CalendarView() {
           const done = s.tasks.filter((t) => t.done).length;
           return (
             <button key={d} onClick={() => pick(d)}
-              className={`card flex w-full items-center gap-3 p-3 text-left ${selected === d && wide ? 'ring-2 ring-blue-500' : ''} ${s.off ? 'opacity-60' : ''}`}>
-              <div className={`w-16 text-sm font-semibold ${d === today ? 'text-blue-600' : weekday(d) === 0 || s.hol ? 'text-red-500' : ''}`}>
+              className={`card flex w-full items-center gap-3 p-3 text-left ${selected === d && wide ? 'ring-2 ring-zinc-900 dark:ring-zinc-100' : ''} ${s.off ? 'opacity-60' : ''}`}>
+              <div className={`w-16 text-sm font-semibold ${d === today ? 'underline underline-offset-4' : weekday(d) === 0 || s.hol ? 'text-rose-400' : ''}`}>
                 {prettyDate(d)}
               </div>
               <div className="flex-1 space-y-1">
@@ -141,8 +167,8 @@ export function CalendarView() {
                     <span key={x.id} className="inline-flex items-center gap-1"><Dot subject={x.id} filled={x.done === x.n} />{x.done}/{x.n}</span>
                   ))}
                 </div>
-                <div className="h-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                  <div className="h-full bg-blue-600" style={{ width: `${s.tasks.length ? (done / s.tasks.length) * 100 : 0}%` }} />
+                <div className="h-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div className="h-full bg-zinc-900 dark:bg-zinc-100" style={{ width: `${s.tasks.length ? (done / s.tasks.length) * 100 : 0}%` }} />
                 </div>
               </div>
               <div className="w-12 text-right text-sm font-medium tabular-nums">{fmtMin(s.min)}</div>
@@ -190,11 +216,13 @@ function PhaseBar({ d }: { d: string }) {
 
 function Legend() {
   return (
-    <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs muted">
+    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs muted">
       {SUBJECTS.filter((s) => s.id !== 'etc').map((s) => (
-        <span key={s.id} className="inline-flex items-center gap-1"><Dot subject={s.id} />{s.name}</span>
+        <span key={s.id} className="inline-flex items-center gap-1">
+          <span className="h-2 w-3 rounded-full" style={{ background: s.color }} />{s.name}
+        </span>
       ))}
-      <span className="inline-flex items-center gap-1"><Dot subject="etc" filled={false} />미완료</span>
+      <span className="ml-auto">채움 = 완료 · 테두리 = 남음</span>
     </div>
   );
 }

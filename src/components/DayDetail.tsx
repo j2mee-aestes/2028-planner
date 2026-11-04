@@ -7,7 +7,7 @@ import type { Score, TaskKind } from '../lib/types';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
 import { ScoreModal } from './ScoreModal';
 import { Timer } from './Timer';
-import { Dot, SubjectSelect } from './ui';
+import { Dot, inkVars, SubjectSelect } from './ui';
 
 export function DayDetail({ date }: { date: string }) {
   const { plan, data, day, updateDay } = useStore();
@@ -95,9 +95,9 @@ export function DayDetail({ date }: { date: string }) {
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="text-lg font-bold">{prettyDate(date)}</h2>
-          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs dark:bg-slate-800">{PHASE_LABEL[plan.phase(date)]}</span>
+          <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">{PHASE_LABEL[plan.phase(date)]}</span>
           {hol && <span className="text-xs font-medium text-red-500">{hol}</span>}
-          {date === today && <span className="rounded bg-blue-600 px-1.5 py-0.5 text-xs text-white">오늘</span>}
+          {date === today && <span className="rounded bg-zinc-900 px-1.5 py-0.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900">오늘</span>}
         </div>
         {plan.events[date]?.map((e) => (
           <div key={e.title} className="mt-1 text-xs font-medium text-amber-600 dark:text-amber-400">📌 {e.title}</div>
@@ -108,8 +108,8 @@ export function DayDetail({ date }: { date: string }) {
           <span className="text-sm muted">/ 목표 {fmtMin(target)}</span>
           <span className="ml-auto text-sm muted">할 일 {doneN}/{tasks.length}</span>
         </div>
-        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-          <div className="h-full bg-blue-600" style={{ width: `${Math.min(100, (total / target) * 100)}%` }} />
+        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <div className="h-full bg-zinc-900 dark:bg-zinc-100" style={{ width: `${Math.min(100, (total / target) * 100)}%` }} />
         </div>
       </div>
 
@@ -124,7 +124,7 @@ export function DayDetail({ date }: { date: string }) {
         {rec.logs.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {rec.logs.map((l) => (
-              <span key={l.id} className="inline-flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-2 pr-1 text-xs dark:bg-slate-800">
+              <span key={l.id} className="inline-flex items-center gap-1 rounded-full bg-zinc-100 py-0.5 pl-2 pr-1 text-xs dark:bg-zinc-800">
                 <Dot subject={l.subject} /> {subjectOf(l.subject).name} {fmtHM(l.min)}{l.src === 'timer' ? ' ⏱' : ''}
                 <button className="px-1 muted" onClick={() => updateDay(date, (d) => ({ ...d, logs: d.logs.filter((x) => x.id !== l.id) }))} aria-label="삭제">✕</button>
               </span>
@@ -153,21 +153,21 @@ export function DayDetail({ date }: { date: string }) {
         {groups.length === 0 && <p className="text-sm muted">{off ? '쉬는 날입니다.' : '배정된 할 일이 없습니다.'}</p>}
         {groups.map(({ s, items }) => (
           <div key={s.id}>
-            <div className="mb-1 flex items-center gap-1.5 text-sm font-bold" style={{ color: s.color }}>
+            <div className="subj-ink mb-1 flex items-center gap-1.5 text-sm font-bold" style={inkVars(s.id)}>
               <Dot subject={s.id} /> {s.name}
               {bySubject[s.id] ? <span className="font-normal muted">· {fmtHM(bySubject[s.id])}</span> : null}
             </div>
-            <ul className="card divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="card divide-y divide-zinc-100 dark:divide-zinc-800">
               {items.map((t) => (
                 <li key={t.id} className="flex items-start gap-2.5 px-3 py-2">
-                  <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-slate-900 dark:accent-slate-200" checked={t.done} onChange={() => toggle(t)} />
+                  <input type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-zinc-900 dark:accent-zinc-200" checked={t.done} onChange={() => toggle(t)} />
                   <div className="min-w-0 flex-1">
                     {editing === t.id ? (
                       <input autoFocus className="input" value={editText} onChange={(e) => setEditText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && saveEdit(t)} onBlur={() => saveEdit(t)} />
                     ) : (
                       <div className={`text-sm ${t.done ? 'line-through muted' : ''}`}>
-                        {t.kind === 'mock' && <span className="mr-1 rounded bg-slate-100 px-1 text-[10px] font-bold dark:bg-slate-800">모고</span>}
+                        {t.kind === 'mock' && <span className="mr-1 rounded bg-zinc-100 px-1 text-[10px] font-bold dark:bg-zinc-800">모고</span>}
                         {t.title}
                       </div>
                     )}
@@ -177,7 +177,7 @@ export function DayDetail({ date }: { date: string }) {
                       {t.plan?.tentative ? ' · 미확정' : ''}
                     </div>
                     {t.kind === 'mock' && t.done && (
-                      <button className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-400"
+                      <button className="mt-1 text-xs font-medium text-zinc-900 underline underline-offset-2 dark:text-zinc-100"
                         onClick={() => setScore(scoreByTask[t.id] ?? { type: 'self', name: t.title, taskId: t.id, org: t.plan?.org, subjects: { [t.subject]: { wrong: [] } } })}>
                         {scoreByTask[t.id] ? `점수 ${scoreByTask[t.id].subjects[t.subject]?.raw ?? '-'}점 · 수정` : '점수 입력'}
                       </button>

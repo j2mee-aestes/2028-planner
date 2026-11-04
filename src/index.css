@@ -4,13 +4,15 @@
 
 html { -webkit-tap-highlight-color: transparent; }
 body { padding-bottom: env(safe-area-inset-bottom); }
-.card { @apply rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900; }
+.card { @apply rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900; }
 .btn { @apply inline-flex whitespace-nowrap shrink-0 items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium transition active:scale-95 disabled:opacity-40; }
-.btn-primary { @apply btn bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white; }
-.btn-ghost { @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800; }
-.btn-outline { @apply btn border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800; }
-.input { @apply w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950; }
-.label { @apply text-xs font-medium text-slate-500 dark:text-slate-400; }
-.muted { @apply text-slate-500 dark:text-slate-400; }
+.btn-primary { @apply btn bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white; }
+.btn-ghost { @apply btn text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800; }
+.btn-outline { @apply btn border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800; }
+.input { @apply w-full rounded-lg border border-zinc-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-950; }
+.label { @apply text-xs font-medium text-zinc-500 dark:text-zinc-400; }
+.muted { @apply text-zinc-500 dark:text-zinc-400; }
 :root { --surface: #ffffff; }
 .dark { --surface: #0f172a; }
+.subj-ink { color: var(--ink); }
+.dark .subj-ink { color: var(--pastel); }

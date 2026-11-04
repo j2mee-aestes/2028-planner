@@ -28,14 +28,14 @@ function Shell({ email }: { email?: string | null }) {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl">
-      <nav className="sticky top-0 hidden h-screen w-48 shrink-0 flex-col gap-1 border-r border-slate-200 p-3 dark:border-slate-800 md:flex">
+      <nav className="sticky top-0 hidden h-screen w-48 shrink-0 flex-col gap-1 border-r border-zinc-200 p-3 dark:border-zinc-800 md:flex">
         <div className="mb-3 px-2">
           <div className="text-sm font-bold">2028 수능 플래너</div>
           <div className="text-xs muted">수능 D-{dday}</div>
         </div>
         {NAV.map(([v, l, i]) => (
           <button key={v} onClick={() => setView(v)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${view === v ? 'bg-slate-200 font-semibold dark:bg-slate-800' : 'hover:bg-slate-100 dark:hover:bg-slate-900'}`}>
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${view === v ? 'bg-zinc-200 font-semibold dark:bg-zinc-800' : 'hover:bg-zinc-100 dark:hover:bg-zinc-900'}`}>
             <span>{i}</span>{l}
           </button>
         ))}
@@ -43,7 +43,7 @@ function Shell({ email }: { email?: string | null }) {
       <main className="min-w-0 flex-1 px-4 pb-24 pt-4 md:px-6 md:pb-8">
         <div className="mb-3 flex items-center justify-between md:hidden">
           <span className="text-sm font-bold">2028 수능 플래너</span>
-          <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-bold text-white dark:bg-slate-100 dark:text-slate-900">D-{dday}</span>
+          <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-bold text-white dark:bg-zinc-100 dark:text-zinc-900">D-{dday}</span>
         </div>
         {!loaded ? <p className="muted">불러오는 중…</p> : (
           <>
@@ -55,7 +55,7 @@ function Shell({ email }: { email?: string | null }) {
           </>
         )}
       </main>
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 md:hidden">
         {NAV.map(([v, l, i]) => (
           <button key={v} onClick={() => setView(v)} className={`flex flex-col items-center py-2 text-[11px] ${view === v ? 'font-bold' : 'muted'}`}>
             <span className="text-lg leading-none">{i}</span>{l}

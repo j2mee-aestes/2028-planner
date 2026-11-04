@@ -51,7 +51,7 @@ export const fmtMin = (min: number) => {
 export const fmtHM = (min: number) => {
   const m = Math.round(min);
   const h = Math.floor(m / 60);
-  return h ? `${h}시간 ${m % 60}분` : `${m}분`;
+  return h ? (m % 60 ? `${h}시간 ${m % 60}분` : `${h}시간`) : `${m}분`;
 };
 export const fmtClock = (ms: number) => {
   const s = Math.max(0, Math.floor(ms / 1000));

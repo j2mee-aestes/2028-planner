@@ -33,13 +33,13 @@ export function Timer({ defaultSubject = 'math' }: { defaultSubject?: string }) 
   if (running) {
     const s = subjectOf(running.subject);
     return (
-      <div className="flex items-center gap-3 rounded-xl p-3 text-white" style={{ background: s.color }}>
+      <div className="flex items-center gap-3 rounded-xl p-3 text-zinc-900" style={{ background: s.color }}>
         <div className="flex-1">
           <div className="text-xs opacity-90">{s.name} 공부 중</div>
           <div className="text-2xl font-bold tabular-nums">{fmtClock(now - running.startedAt)}</div>
         </div>
-        <button className="btn bg-white/20 hover:bg-white/30" onClick={cancel}>취소</button>
-        <button className="btn bg-white font-bold text-slate-900" onClick={stop}>■ 정지</button>
+        <button className="btn bg-white/40 hover:bg-white/60" onClick={cancel}>취소</button>
+        <button className="btn bg-zinc-900 font-bold text-white" onClick={stop}>■ 정지</button>
       </div>
     );
   }

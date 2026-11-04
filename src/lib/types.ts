@@ -6,7 +6,8 @@ export interface Subject {
   id: SubjectId;
   name: string;
   short: string;
-  color: string; // hex
+  color: string; // 파스텔 (점·막대·채움)
+  ink: string; // 같은 계열 진한 색 (글자)
   active: boolean;
   /** 성적 기록 시 문항 수 (틀린 번호 입력용) */
   questions: number;
