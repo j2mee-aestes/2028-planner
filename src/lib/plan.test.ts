@@ -85,7 +85,7 @@ describe('미루기', () => {
   const t = p.byDate[date][0];
   const day = { checks: {}, edits: { [t.id]: { postponed: '2027-01-12', snap: { title: t.title, subject: t.subject, kind: t.kind } } },
     custom: [{ id: 'c-1', subject: 'etc', title: '내 할 일', kind: 'study' as const, postponed: '2027-01-13' }], logs: [] };
-  const data = { settings: S, days: { [date]: day }, scores: {} };
+  const data = { settings: S, days: { [date]: day }, scores: {}, wrongs: {} };
   it('미룬 항목은 그날 목록에서 빠지고 미룬 목록에 나옴', () => {
     expect(tasksOf(p, date, day).some((x) => x.id === t.id || x.id === 'c-1')).toBe(false);
     expect(postponedList(p, data).map((x) => x.id)).toEqual([t.id, 'c-1']);
@@ -96,5 +96,27 @@ describe('미루기', () => {
     const d3 = { ...day, edits: { [t.id]: { movedTo: '2027-01-14' } }, custom: [] };
     expect(postponedList(p, { ...data, days: { [date]: d3 } })).toHaveLength(0);
     expect(tasksOf(p, date, d3).some((x) => x.id === t.id)).toBe(false);
+  });
+});
+
+import { streaks, trackProgress } from './insights';
+import { withReviews } from './plan';
+describe('오답 재풀이·연속 공부·진도', () => {
+  const base = generatePlan(S);
+  it('재풀이 일정이 할 일로 들어가고, 쉬는 날이면 다음 공부일로', () => {
+    const p = withReviews(base, { w1: { id: 'w1', subject: 'kor', no: 17, exam: '3월 학평', date: '2027-01-01', reviews: ['2027-02-06', '2027-01-20'] } });
+    expect(p.byDate['2027-02-07'].some((t) => t.id === 'wrong-review:w1-0')).toBe(true); // 2/6 설 연휴 첫날 → 2/7
+    expect(p.byDate['2027-01-20'].some((t) => t.id === 'wrong-review:w1-1')).toBe(true);
+  });
+  it('연속 공부일: 쉬는 날은 건너뛰고, 오늘 0분은 끊지 않음', () => {
+    const log = (min: number) => ({ checks: {}, edits: {}, custom: [], logs: [{ id: 'x', subject: 'kor', min, src: 'manual' as const }] });
+    const days = { '2026-12-23': log(60), '2026-12-24': log(60), '2026-12-26': log(60) }; // 12/25 휴무
+    const s = streaks({ settings: S, days, scores: {}, wrongs: {} }, base, '2026-12-27');
+    expect(s.current).toBe(3);
+  });
+  it('밀린 만큼 예상 완료일이 뒤로', () => {
+    const tp = trackProgress({ settings: S, days: {}, scores: {}, wrongs: {} }, base, '2027-01-10').find((t) => t.id === 'm-calc2')!;
+    expect(tp.late).toBeGreaterThan(0);
+    expect(tp.projected! > tp.last!).toBe(true);
   });
 });

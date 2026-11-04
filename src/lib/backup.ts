@@ -15,5 +15,5 @@ export function exportJSON(data: AppData) {
 export async function readBackup(file: File): Promise<AppData> {
   const j = JSON.parse(await file.text());
   if (!j || typeof j !== 'object' || !j.days || !j.settings) throw new Error('백업 파일 형식이 아닙니다');
-  return { settings: j.settings, days: j.days, scores: j.scores ?? {} };
+  return { settings: j.settings, days: j.days, scores: j.scores ?? {}, wrongs: j.wrongs ?? {} };
 }

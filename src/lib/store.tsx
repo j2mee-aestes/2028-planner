@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { DEFAULT_SCHOOL, DEFAULT_TARGETS } from '../seed/calendar';
 import type { Backend } from './firebase';
-import { generatePlan, type Plan } from './plan';
-import type { AppData, DayRecord, Score, Settings } from './types';
+import { generatePlan, withReviews, type Plan } from './plan';
+import type { AppData, DayRecord, Score, Settings, WrongNote } from './types';
 
 export const defaultSettings = (): Settings => ({
   school: DEFAULT_SCHOOL,
@@ -29,6 +29,8 @@ interface Ctx {
   updateSettings: (fn: (s: Settings) => Settings) => void;
   saveScore: (s: Score) => void;
   deleteScore: (id: string) => void;
+  saveWrong: (w: WrongNote) => void;
+  deleteWrong: (id: string) => void;
   replaceAll: (d: AppData) => Promise<void>;
 }
 
@@ -36,7 +38,7 @@ const StoreCtx = createContext<Ctx>(null as unknown as Ctx);
 export const useStore = () => useContext(StoreCtx);
 
 export function StoreProvider({ backend, children }: { backend: Backend; children: ReactNode }) {
-  const [data, setData] = useState<AppData>({ settings: defaultSettings(), days: {}, scores: {} });
+  const [data, setData] = useState<AppData>({ settings: defaultSettings(), days: {}, scores: {}, wrongs: {} });
   const [loaded, setLoaded] = useState(false);
   const ref = useRef(data);
   ref.current = data;
@@ -48,6 +50,7 @@ export function StoreProvider({ backend, children }: { backend: Backend; childre
           settings: p.settings ? normSettings(p.settings) : d.settings,
           days: p.days ?? d.days,
           scores: p.scores ?? d.scores,
+          wrongs: p.wrongs ?? d.wrongs,
         }));
         setLoaded(true);
       }),
@@ -80,8 +83,22 @@ export function StoreProvider({ backend, children }: { backend: Backend; childre
     backend.deleteScore(id);
   }, [backend]);
 
+  const saveWrong = useCallback((w: WrongNote) => {
+    setData((d) => ({ ...d, wrongs: { ...d.wrongs, [w.id]: w } }));
+    backend.saveWrong(w);
+  }, [backend]);
+
+  const deleteWrong = useCallback((id: string) => {
+    setData((d) => {
+      const wrongs = { ...d.wrongs };
+      delete wrongs[id];
+      return { ...d, wrongs };
+    });
+    backend.deleteWrong(id);
+  }, [backend]);
+
   const replaceAll = useCallback(async (d: AppData) => {
-    const next = { settings: normSettings(d.settings), days: d.days ?? {}, scores: d.scores ?? {} };
+    const next = { settings: normSettings(d.settings), days: d.days ?? {}, scores: d.scores ?? {}, wrongs: d.wrongs ?? {} };
     await backend.replaceAll(next);
     setData(next);
   }, [backend]);
@@ -89,12 +106,13 @@ export function StoreProvider({ backend, children }: { backend: Backend; childre
   // 커리 생성은 일정 관련 설정이 바뀔 때만 다시 계산
   const s = data.settings;
   const planKey = JSON.stringify([s.school, s.extraHolidays, s.extraOff, s.extraStudy]);
-  const plan = useMemo(() => generatePlan(s), [planKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const basePlan = useMemo(() => generatePlan(s), [planKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const plan = useMemo(() => withReviews(basePlan, data.wrongs), [basePlan, data.wrongs]);
 
   const day = useCallback((date: string) => normDay(data.days[date]), [data.days]);
 
   return (
-    <StoreCtx.Provider value={{ data, plan, loaded, day, updateDay, updateSettings, saveScore, deleteScore, replaceAll }}>
+    <StoreCtx.Provider value={{ data, plan, loaded, day, updateDay, updateSettings, saveScore, deleteScore, saveWrong, deleteWrong, replaceAll }}>
       {children}
     </StoreCtx.Provider>
   );

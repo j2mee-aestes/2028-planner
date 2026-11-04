@@ -4,7 +4,7 @@ import {
   collection, deleteDoc, doc, initializeFirestore, onSnapshot, persistentLocalCache,
   persistentMultipleTabManager, setDoc, writeBatch, type Firestore,
 } from 'firebase/firestore';
-import type { AppData, DayRecord, Score, Settings } from './types';
+import type { AppData, DayRecord, Score, Settings, WrongNote } from './types';
 
 const env = import.meta.env;
 export const firebaseEnabled = Boolean(env.VITE_FIREBASE_API_KEY && env.VITE_FIREBASE_PROJECT_ID);
@@ -20,13 +20,14 @@ if (firebaseEnabled) {
     authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
     projectId: env.VITE_FIREBASE_PROJECT_ID,
     appId: env.VITE_FIREBASE_APP_ID,
+    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   });
   auth = getAuth(app);
   // 로컬 캐시 우선: 쓰기는 기기에 즉시 반영되고 서버 동기화는 백그라운드. 오프라인에서도 동작.
   db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 }
 
-export { auth };
+export { app, auth };
 
 export async function login() {
   const provider = new GoogleAuthProvider();
@@ -47,6 +48,8 @@ export interface Backend {
   saveDay(date: string, d: DayRecord): void;
   saveScore(s: Score): void;
   deleteScore(id: string): void;
+  saveWrong(w: WrongNote): void;
+  deleteWrong(id: string): void;
   replaceAll(d: AppData): Promise<void>;
 }
 
@@ -68,19 +71,27 @@ export function firestoreBackend(uid: string): Backend {
         qs.forEach((d) => (scores[d.id] = d.data() as Score));
         cb({ scores });
       }, report);
-      return () => { u1(); u2(); u3(); };
+      const u4 = onSnapshot(collection(db!, `${base}/wrongs`), (qs) => {
+        const wrongs: Record<string, WrongNote> = {};
+        qs.forEach((d) => (wrongs[d.id] = d.data() as WrongNote));
+        cb({ wrongs });
+      }, report);
+      return () => { u1(); u2(); u3(); u4(); };
     },
     saveSettings: (s) => void setDoc(doc(db!, `${base}/meta/settings`), clean(s)).catch(report),
     saveDay: (date, d) => void setDoc(doc(db!, `${base}/days/${date}`), clean(d)).catch(report),
     saveScore: (s) => void setDoc(doc(db!, `${base}/scores/${s.id}`), clean(s)).catch(report),
     deleteScore: (id) => void deleteDoc(doc(db!, `${base}/scores/${id}`)).catch(report),
+    saveWrong: (w) => void setDoc(doc(db!, `${base}/wrongs/${w.id}`), clean(w)).catch(report),
+    deleteWrong: (id) => void deleteDoc(doc(db!, `${base}/wrongs/${id}`)).catch(report),
     async replaceAll(data) {
       const ops: [string, unknown][] = [[`${base}/meta/settings`, data.settings]];
       for (const [k, v] of Object.entries(data.days)) ops.push([`${base}/days/${k}`, v]);
       for (const [k, v] of Object.entries(data.scores)) ops.push([`${base}/scores/${k}`, v]);
-      for (let i = 0; i < ops.length; i += 400) {
+      for (const [k, v] of Object.entries(data.wrongs)) ops.push([`${base}/wrongs/${k}`, v]);
+      for (let i = 0; i < ops.length; i += 100) {
         const b = writeBatch(db!);
-        for (const [p, v] of ops.slice(i, i + 400)) b.set(doc(db!, p), clean(v as object));
+        for (const [p, v] of ops.slice(i, i + 100)) b.set(doc(db!, p), clean(v as object));
         await b.commit();
       }
     },
@@ -104,6 +115,8 @@ export function localBackend(): Backend {
     saveDay: (date, v) => write((d) => ((d.days ??= {})[date] = v)),
     saveScore: (s) => write((d) => ((d.scores ??= {})[s.id] = s)),
     deleteScore: (id) => write((d) => { if (d.scores) delete d.scores[id]; }),
+    saveWrong: (w) => write((d) => ((d.wrongs ??= {})[w.id] = w)),
+    deleteWrong: (id) => write((d) => { if (d.wrongs) delete d.wrongs[id]; }),
     async replaceAll(data) { write((d) => Object.assign(d, data)); },
   };
 }

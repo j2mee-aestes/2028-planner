@@ -72,3 +72,11 @@ button { -webkit-user-select: none; user-select: none; touch-action: manipulatio
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
+
+/* 공부 잔디: 단일 색조 순차 (라이트는 옅음→진함, 다크는 어두움→밝음) */
+.hm-0 { background: #e4e4e7; } .hm-1 { background: #a1a1aa; } .hm-2 { background: #71717a; } .hm-3 { background: #3f3f46; } .hm-4 { background: #18181b; }
+.dark .hm-0 { background: #27272a; } .dark .hm-1 { background: #52525b; } .dark .hm-2 { background: #a1a1aa; } .dark .hm-3 { background: #d4d4d8; } .dark .hm-4 { background: #fafafa; }
+.hm-off { background: transparent !important; box-shadow: inset 0 0 0 1px #d4d4d8; }
+.dark .hm-off { box-shadow: inset 0 0 0 1px #3f3f46; }
+
+.drag-card { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; cursor: grab; }

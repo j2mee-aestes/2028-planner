@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Heatmap } from '../components/Heatmap';
+import { IconChevronLeft, IconChevronRight } from '../components/icons';
+import { ProgressList } from '../components/ProgressList';
 import { Segmented, Stat } from '../components/ui';
+import { WeeklyReview } from '../components/WeeklyReview';
 import { addDays, addMonths, eachDay, endOfMonth, fmtHM, fmtMin, kstToday, monthKey, startOfMonth, startOfWeek } from '../lib/date';
 import { minutesBySubject, mockCountByMonth, tasksOf } from '../lib/stats';
 import { useStore } from '../lib/store';
@@ -32,6 +36,7 @@ export function StatsView() {
   const { data, plan } = useStore();
   const today = kstToday();
   const [range, setRange] = useState<Range>('day');
+  const [rw, setRw] = useState(() => startOfWeek(kstToday()));
   const subs = SUBJECTS.filter((s) => s.active && (s.id !== 'etc' || Object.values(data.days).some((d) => d.logs?.some((l) => l.subject === 'etc'))));
 
   const buckets: { label: string; from: string; to: string }[] = [];
@@ -64,6 +69,7 @@ export function StatsView() {
   return (
     <div className="space-y-4">
       <h1 className="text-lg">통계</h1>
+      <Heatmap />
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Stat label="오늘" value={fmtMin(sumRange(today, today))} />
         <Stat label="이번 주" value={fmtMin(sumRange(ws, addDays(ws, 6)))} sub={`완료율 ${completion(ws, today)}%`} />
@@ -91,6 +97,17 @@ export function StatsView() {
           </ResponsiveContainer>
         </div>
       </section>
+
+      <section className="card p-4">
+        <div className="mb-3 flex items-center gap-1">
+          <h2 className="flex-1 text-sm">주간 회고</h2>
+          <button className="icon-btn h-8 w-8" onClick={() => setRw(addDays(rw, -7))} aria-label="이전 주"><IconChevronLeft size={18} /></button>
+          <button className="icon-btn h-8 w-8" onClick={() => setRw(addDays(rw, 7))} aria-label="다음 주"><IconChevronRight size={18} /></button>
+        </div>
+        <WeeklyReview ws={rw} />
+      </section>
+
+      <ProgressList />
 
       <section className="card p-3">
         <h2 className="mb-2 text-sm">이번 달 과목별</h2>

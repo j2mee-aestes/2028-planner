@@ -6,7 +6,12 @@ import { IconPencil, IconTrash } from './icons';
 import { Check } from './ui';
 
 /** 할 일 한 줄. size='lg' 는 주간 보드용 큰 카드 */
-export function TaskRow({ t, date, a, size = 'md', meta = true }: { t: DayTask; date: string; a: TaskActions; size?: 'md' | 'lg'; meta?: boolean }) {
+export function TaskRow({ t, date, a, size = 'md', meta = true, drag, dimmed }: {
+  t: DayTask; date: string; a: TaskActions; size?: 'md' | 'lg'; meta?: boolean;
+  /** 주간 보드 끌어서 옮기기 핸들러 */
+  drag?: { onMouseDown: (e: React.MouseEvent) => void; onTouchStart: (e: React.TouchEvent) => void };
+  dimmed?: boolean;
+}) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(t.title);
   const save = () => {
@@ -18,7 +23,7 @@ export function TaskRow({ t, date, a, size = 'md', meta = true }: { t: DayTask; 
   const lg = size === 'lg';
 
   return (
-    <li className={`group relative flex items-start gap-3 ${lg ? 'rounded-2xl bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:bg-zinc-900' : 'px-4 py-3'}`}>
+    <li {...drag} className={`group relative flex items-start gap-3 transition-opacity ${dimmed ? 'opacity-30' : ''} ${drag ? 'drag-card' : ''} ${lg ? 'rounded-2xl bg-white px-3.5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] dark:bg-zinc-900' : 'px-4 py-3'}`}>
       {lg && <span className="absolute inset-y-3 left-0 w-[3px] rounded-full" style={{ background: subjectOf(t.subject).color }} />}
       <Check checked={t.done} onChange={() => a.toggle(t, date)} label={t.title} />
       <div className="min-w-0 flex-1">

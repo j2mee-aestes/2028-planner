@@ -7,7 +7,8 @@ import type { SchoolCalendar } from '../lib/types';
 import { PLAN_END, PLAN_START } from '../seed/calendar';
 import { subjectOf } from '../seed/subjects';
 import { IconClose } from '../components/icons';
-import { Disclosure, Segmented } from '../components/ui';
+import { Check, Disclosure, Segmented } from '../components/ui';
+import { getPushToken } from '../lib/push';
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -146,6 +147,8 @@ export function SettingsView({ email }: { email?: string | null }) {
         </ul>
       </section>
 
+      <PushSection />
+
       <section className="card space-y-2 p-3">
         <h2 className="text-sm">백업</h2>
         <div className="flex gap-2">
@@ -158,7 +161,7 @@ export function SettingsView({ email }: { email?: string | null }) {
             try {
               const d = await readBackup(f);
               if (confirm(`백업(${Object.keys(d.days).length}일, 성적 ${Object.keys(d.scores).length}건)으로 덮어쓸까요? 현재 데이터 중 백업에 없는 날짜는 유지됩니다.`)) {
-                await replaceAll({ settings: d.settings, days: { ...data.days, ...d.days }, scores: { ...data.scores, ...d.scores } });
+                await replaceAll({ settings: d.settings, days: { ...data.days, ...d.days }, scores: { ...data.scores, ...d.scores }, wrongs: { ...data.wrongs, ...d.wrongs } });
                 alert('가져오기 완료');
               }
             } catch (err: any) { alert(err.message); }
@@ -179,5 +182,37 @@ export function SettingsView({ email }: { email?: string | null }) {
         )}
       </section>
     </div>
+  );
+}
+
+function PushSection() {
+  const { data, updateSettings } = useStore();
+  const push = data.settings.push ?? { tokens: [], morning: true, saturday: true };
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const on = push.tokens.length > 0;
+  const enable = async () => {
+    setBusy(true); setMsg('');
+    try {
+      const token = await getPushToken();
+      updateSettings((s) => ({ ...s, push: { ...push, tokens: [...new Set([...(s.push?.tokens ?? []), token])] } }));
+      setMsg('이 기기에서 알림을 받아요');
+    } catch (e: any) { setMsg(e.message); }
+    setBusy(false);
+  };
+  const set = (k: 'morning' | 'saturday') => updateSettings((s) => ({ ...s, push: { ...push, [k]: !push[k] } }));
+  return (
+    <section className="card space-y-3 p-4">
+      <h2 className="text-sm">휴대폰 알림</h2>
+      <div className="flex items-center gap-2">
+        <button className={on ? 'btn-outline' : 'btn-primary'} disabled={busy} onClick={enable}>{busy ? '설정 중…' : on ? '이 기기도 추가' : '알림 켜기'}</button>
+        {on && <span className="text-xs muted">{push.tokens.length}대 기기 등록됨</span>}
+        {on && <button className="btn-ghost ml-auto px-2 text-xs" onClick={() => updateSettings((s) => ({ ...s, push: { ...push, tokens: [] } }))}>모두 끄기</button>}
+      </div>
+      {msg && <p className="text-xs muted">{msg}</p>}
+      <label className="flex items-center gap-2 text-sm"><Check checked={push.morning} onChange={() => set('morning')} label="아침 알림" />매일 아침 7:30 · 오늘 할 일 개수와 D-day</label>
+      <label className="flex items-center gap-2 text-sm"><Check checked={push.saturday} onChange={() => set('saturday')} label="토요일 알림" />토요일 오전 10시 · 미룬 할 일이 있을 때만</label>
+      <p className="text-[11px] muted">아이폰은 Safari에서 "홈 화면에 추가"한 앱에서만 받을 수 있어요 (iOS 16.4+). 발송은 GitHub Actions 로 무료 — README 설정 필요.</p>
+    </section>
   );
 }

@@ -6,6 +6,8 @@ import { useStore } from '../lib/store';
 import { subjectOf } from '../seed/subjects';
 import { IconCalendar, IconTrash, IconUndo } from './icons';
 import { Dot, Sheet } from './ui';
+import { WeeklyReview } from './WeeklyReview';
+import { startOfWeek } from '../lib/date';
 
 export function usePostponed() {
   const { plan, data } = useStore();
@@ -25,6 +27,13 @@ export function PostponedSheet({ open, onClose, saturday }: { open: boolean; onC
           <div className="mt-0.5 text-xs opacity-70">오늘 하기 · 원래 날짜로 되돌리기 · 다른 날로 옮기기 · 휴지통(완전 삭제)</div>
         </div>
       )}
+      {saturday && (
+        <div className="mb-5 rounded-2xl border border-zinc-200/70 p-4 dark:border-zinc-800">
+          <div className="mb-3 text-sm">이번 주 회고</div>
+          <WeeklyReview ws={startOfWeek(today)} />
+        </div>
+      )}
+      {list.length > 0 && saturday && <div className="mb-2 text-sm">미룬 할 일</div>}
       {list.length === 0 ? (
         <p className="py-8 text-center text-sm muted">미룬 할 일이 없습니다.</p>
       ) : (

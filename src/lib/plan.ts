@@ -1,7 +1,7 @@
 import { CURRICULUM } from '../seed/curriculum';
 import { EVENTS, HOLIDAYS, PERSONAL_OFF, PLAN_END, PLAN_START } from '../seed/calendar';
 import { addDays, eachDay, fmtHM, isWeekend, weekday } from './date';
-import type { Holiday, PhaseId, PlanTask, SchoolCalendar, Settings, Track } from './types';
+import type { Holiday, PhaseId, PlanTask, SchoolCalendar, Settings, Track, WrongNote } from './types';
 
 export const PHASE_LABEL: Record<PhaseId, string> = {
   winter: '겨울방학',
@@ -166,4 +166,30 @@ export function generatePlan(settings: Settings, tracks: Track[] = CURRICULUM): 
   const events: Plan['events'] = {};
   for (const e of EVENTS) (events[e.date] ??= []).push(e);
   return { byDate, byId, off, holidays, phase, events, stats };
+}
+
+/** 재풀이 날짜가 쉬는 날이면 다음 공부일로 */
+export function nextStudyDay(plan: Plan, d: string) {
+  let x = d;
+  for (let i = 0; i < 14 && plan.off.has(x); i++) x = addDays(x, 1);
+  return x;
+}
+
+/** 오답노트 재풀이 일정을 할 일로 합침 (트랙 id: wrong-review) */
+export function withReviews(plan: Plan, wrongs: Record<string, WrongNote>): Plan {
+  const list = Object.values(wrongs);
+  if (!list.length) return plan;
+  const byDate = { ...plan.byDate };
+  const byId = { ...plan.byId };
+  for (const w of list)
+    w.reviews.forEach((due, i) => {
+      const d = nextStudyDay(plan, due);
+      const t: PlanTask = {
+        id: `wrong-review:${w.id}-${i}`, trackId: 'wrong-review', subject: w.subject, kind: 'study', date: d,
+        title: `오답 재풀이 ${i === 0 ? '1차' : i === 1 ? '2차' : `${i + 1}차`} · ${w.exam} ${w.no}번`, trackTitle: '오답노트', estMin: 10,
+      };
+      byDate[d] = [...(byDate[d] ?? []), t];
+      byId[t.id] = t;
+    });
+  return { ...plan, byDate, byId };
 }

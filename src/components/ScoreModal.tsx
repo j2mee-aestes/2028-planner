@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { kstToday, uid } from '../lib/date';
+import { addDays, kstToday, uid } from '../lib/date';
 import { useStore } from '../lib/store';
 import type { Score, SubjectScore } from '../lib/types';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
-import { inkVars, Sheet } from './ui';
+import { Check, inkVars, Sheet } from './ui';
 
 const OFFICIAL_SUBJECTS = ['kor', 'math', 'eng', 'soc', 'sci', 'hist'];
 const ORGS = ['평가원', '교육청', '사설', '기타'];
 
 export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | null; onClose: () => void }) {
-  const { saveScore, deleteScore, data } = useStore();
+  const { saveScore, deleteScore, saveWrong, deleteWrong, data } = useStore();
+  const [autoReview, setAutoReview] = useState(true);
   const existing = initial?.id ? data.scores[initial.id] : undefined;
   const [s, setS] = useState<Score>(() => {
     const base: Score = existing ?? {
@@ -37,6 +38,18 @@ export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | nul
   const save = () => {
     if (!s.name.trim()) return alert('시험명을 입력하세요');
     saveScore(s);
+    // 틀린 번호 → 오답노트 (재풀이 1주 뒤·1달 뒤)
+    const keep = new Set<string>();
+    for (const [sub, v] of Object.entries(s.subjects))
+      for (const no of v.wrong ?? []) {
+        const id = `${s.id}-${sub}-${no}`;
+        keep.add(id);
+        const w = data.wrongs[id];
+        if (!w) saveWrong({ id, scoreId: s.id, subject: sub, no, exam: s.name, date: s.date, reviews: autoReview ? [addDays(s.date, 7), addDays(s.date, 30)] : [] });
+        else if (w.exam !== s.name || w.date !== s.date) saveWrong({ ...w, exam: s.name, date: s.date });
+      }
+    for (const w of Object.values(data.wrongs))
+      if (w.scoreId === s.id && !keep.has(w.id) && !w.memo && !w.photo) deleteWrong(w.id);
     onClose();
   };
 
@@ -120,10 +133,14 @@ export function ScoreModal({ initial, onClose }: { initial: Partial<Score> | nul
           </select>
           <button className="btn-outline" disabled={!addSub} onClick={() => { setSub(addSub, { wrong: [] }); setAddSub(''); }}>추가</button>
         </div>
+        <label className="flex items-center gap-2 text-sm">
+          <Check checked={autoReview} onChange={() => setAutoReview(!autoReview)} label="재풀이 자동 추가" />
+          틀린 문항을 오답노트에 넣고 1주 뒤·1달 뒤 재풀이 할 일 추가
+        </label>
         <textarea className="input" rows={2} placeholder="메모" value={s.memo ?? ''} onChange={(e) => setS({ ...s, memo: e.target.value })} />
         <div className="flex justify-between">
           {existing ? (
-            <button className="btn-ghost text-red-600 dark:text-red-400" onClick={() => { if (confirm('삭제할까요?')) { deleteScore(s.id); onClose(); } }}>삭제</button>
+            <button className="btn-ghost text-red-600 dark:text-red-400" onClick={() => { if (confirm('삭제할까요?')) { deleteScore(s.id); for (const w of Object.values(data.wrongs)) if (w.scoreId === s.id && !w.memo && !w.photo) deleteWrong(w.id); onClose(); } }}>삭제</button>
           ) : <span />}
           <button className="btn-primary px-5" onClick={save}>저장</button>
         </div>

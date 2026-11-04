@@ -8,9 +8,10 @@ import { useStore } from '../lib/store';
 import type { Score } from '../lib/types';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
 import { ChartTooltip } from './StatsView';
+import { WrongNotesView } from '../components/WrongNotes';
 
-type Tab = 'official' | 'self';
-type Filter = 'all' | Tab;
+type Tab = 'official' | 'self' | 'notes';
+type Filter = 'all' | 'official' | 'self';
 const AXIS = { fontSize: 11, fill: '#94a3b8' };
 
 export function ScoresView() {
@@ -48,9 +49,10 @@ export function ScoresView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg">성적</h1>
-        <button className="btn-primary" onClick={() => setEdit({ type: tab })}><IconPlus size={15} />성적 입력</button>
+        <button className="btn-primary" onClick={() => setEdit({ type: tab === 'notes' ? 'self' : tab })}><IconPlus size={15} />성적 입력</button>
       </div>
-      <Segmented value={tab} onChange={setTab} options={[['official', '학교 응시 (평가원·교육청)'], ['self', '내가 푼 모고']]} />
+      <Segmented value={tab} onChange={setTab} options={[['official', '학교 응시'], ['self', '내가 푼 모고'], ['notes', '오답노트']]} />
+      {tab === 'notes' ? <WrongNotesView /> : <>
 
       <section className="space-y-3">
         {list.length === 0 && <p className="text-sm muted">기록이 없습니다. 모고 항목을 체크하면 점수 입력창이 열립니다.</p>}
@@ -130,6 +132,7 @@ export function ScoresView() {
         </div>
       </section>
 
+      </>}
       {edit && <ScoreModal initial={edit} onClose={() => setEdit(null)} />}
     </div>
   );

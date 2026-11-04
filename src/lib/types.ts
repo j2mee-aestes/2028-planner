@@ -94,6 +94,8 @@ export interface Settings {
   extraStudy: string[];
   targets: { weekday: number; weekend: number }; // 분
   runningTimer: { subject: SubjectId; startedAt: number } | null;
+  /** 휴대폰 알림 (GitHub Actions 가 읽어서 발송) */
+  push?: { tokens: string[]; morning: boolean; saturday: boolean };
 }
 
 export interface CustomTask {
@@ -103,6 +105,8 @@ export interface CustomTask {
   kind: TaskKind;
   /** 미룬 날짜(KST). 있으면 그날 목록에서 빠지고 '미룬 할 일'에 표시 */
   postponed?: string;
+  /** 다른 날에서 옮겨온 경우 원래 할 일 id (진도 집계용) */
+  from?: string;
 }
 
 export interface TaskEdit {
@@ -133,6 +137,10 @@ export interface DayRecord {
   custom: CustomTask[];
   logs: TimeLog[];
   memo?: string;
+  /** 토요일 주간 회고 한 줄 */
+  review?: string;
+  /** 타임라인 계획: taskId -> 'HH:MM' */
+  slots?: Record<string, string>;
 }
 
 export interface SubjectScore {
@@ -154,8 +162,24 @@ export interface Score {
   memo?: string;
 }
 
+/** 오답노트: 틀린 문항 1개 */
+export interface WrongNote {
+  id: string;
+  scoreId?: string;
+  subject: SubjectId;
+  no: number;
+  exam: string;
+  date: string;
+  memo?: string;
+  /** 압축한 사진 (data URL, 약 150KB 이하) */
+  photo?: string;
+  /** 재풀이 일정 (날짜). 완료 여부는 그날 체크로 기록 */
+  reviews: string[];
+}
+
 export interface AppData {
   settings: Settings;
   days: Record<string, DayRecord>;
   scores: Record<string, Score>;
+  wrongs: Record<string, WrongNote>;
 }

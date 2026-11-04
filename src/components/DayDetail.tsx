@@ -8,9 +8,10 @@ import type { TaskKind } from '../lib/types';
 import { SUBJECTS, subjectOf } from '../seed/subjects';
 import { PostponedSheet, usePostponed } from './PostponedSheet';
 import { TaskRow } from './TaskRow';
+import { Timeline } from './Timeline';
 import { Timer } from './Timer';
 import { IconChevronRight, IconClose, IconPin, IconPlus, IconTimer } from './icons';
-import { Check, Disclosure, Dot, inkVars, SubjectSelect } from './ui';
+import { Check, Disclosure, Dot, inkVars, Segmented, SubjectSelect } from './ui';
 
 export function DayDetail({ date }: { date: string }) {
   const { plan, data, day, updateDay } = useStore();
@@ -25,6 +26,8 @@ export function DayDetail({ date }: { date: string }) {
   const a = useTaskActions();
   const postponed = usePostponed();
   const [showPostponed, setShowPostponed] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<'list' | 'time'>(() => { try { return (localStorage.getItem('day-layout') as 'list' | 'time') || 'list'; } catch { return 'list'; } });
+  const chooseLayout = (v: 'list' | 'time') => { setLayoutMode(v); try { localStorage.setItem('day-layout', v); } catch {} };
 
   // 직접 추가
   const [nSub, setNSub] = useState('kor');
@@ -126,6 +129,12 @@ export function DayDetail({ date }: { date: string }) {
         </Disclosure>
       )}
 
+      {tasks.length > 0 && (
+        <div className="flex justify-end">
+          <Segmented value={layoutMode} onChange={chooseLayout} options={[['list', '목록'], ['time', '타임라인']]} />
+        </div>
+      )}
+      {layoutMode === 'time' && tasks.length > 0 ? <Timeline date={date} tasks={tasks} /> : (
       <section className="space-y-3">
         {groups.length === 0 && <p className="text-sm muted">{off ? '쉬는 날입니다.' : '배정된 할 일이 없습니다.'}</p>}
         {groups.map(({ s, items }) => (
@@ -140,6 +149,7 @@ export function DayDetail({ date }: { date: string }) {
           </div>
         ))}
       </section>
+      )}
 
       <section className="card space-y-2.5 p-4">
         <div className="label">할 일 추가</div>

@@ -60,12 +60,26 @@ export function useTaskActions() {
   /** 다른 날짜(기본 오늘)로 옮기기: 대상 날짜에 직접 추가 항목으로 생성 */
   const moveTo = (p: PostponedItem, target = today) => {
     if (target === p.date) return restore(p);
-    updateDay(target, (d) => ({ ...d, custom: [...d.custom, { id: `c-${uid()}`, subject: p.subject, title: p.title, kind: p.kind }] }));
+    updateDay(target, (d) => ({ ...d, custom: [...d.custom, { id: `c-${uid()}`, subject: p.subject, title: p.title, kind: p.kind, from: p.custom ? undefined : p.id }] }));
     updateDay(p.date, (d) =>
       p.custom
         ? { ...d, custom: d.custom.filter((c) => c.id !== p.id) }
         : { ...d, edits: { ...d.edits, [p.id]: { ...d.edits[p.id], postponed: undefined, movedTo: target } } },
     );
+  };
+
+  /** 할 일을 다른 날짜로 옮기기 (주간 보드 끌어놓기) */
+  const move = (t: DayTask, from: string, to: string) => {
+    if (from === to) return;
+    if (t.custom) {
+      const c = day(from).custom.find((x) => x.id === t.id);
+      if (!c) return;
+      updateDay(from, (d) => ({ ...d, custom: d.custom.filter((x) => x.id !== t.id) }));
+      updateDay(to, (d) => ({ ...d, custom: [...d.custom, c] }));
+    } else {
+      updateDay(to, (d) => ({ ...d, custom: [...d.custom, { id: `c-${uid()}`, subject: t.subject, title: t.title, kind: t.kind, from: t.id }] }));
+      updateDay(from, (d) => ({ ...d, edits: { ...d.edits, [t.id]: { ...d.edits[t.id], movedTo: to } } }));
+    }
   };
 
   /** 쓰레기통 2번: 완전 삭제 */
@@ -77,7 +91,7 @@ export function useTaskActions() {
     );
 
   const scoreModal = score ? <ScoreModal initial={score} onClose={() => setScore(null)} /> : null;
-  return { toggle, openScore, rename, postpone, restore, moveTo, purge, scoreByTask, scoreModal };
+  return { toggle, openScore, rename, postpone, restore, moveTo, move, purge, scoreByTask, scoreModal };
 }
 
 export type TaskActions = ReturnType<typeof useTaskActions>;

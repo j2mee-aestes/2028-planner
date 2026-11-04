@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import type { DayTask } from '../lib/stats';
 import { useTaskActions } from '../lib/actions';
 import { fmtMin, uid, wdName, weekday } from '../lib/date';
 import { dayMinutes, tasksOf } from '../lib/stats';
 import { useStore } from '../lib/store';
-import { SUBJECTS } from '../seed/subjects';
+import { SUBJECTS, subjectOf } from '../seed/subjects';
 import { IconPlus } from './icons';
 import { TaskRow } from './TaskRow';
 import { SubjectSelect } from './ui';
@@ -15,6 +17,60 @@ export function WeekBoard({ days, today, onOpen }: { days: string[]; today: stri
   const { plan, day } = useStore();
   const a = useTaskActions();
   const scroller = useRef<HTMLDivElement>(null);
+
+  // ---- 끌어서 다른 요일로 옮기기 (PC: 바로 드래그 / 모바일: 길게 누른 뒤 드래그) ----
+  type Drag = { t: DayTask; from: string; x: number; y: number; over: string; w: number };
+  const dragRef = useRef<Drag | null>(null);
+  const [drag, setDragState] = useState<Drag | null>(null);
+  const setDrag = (d: Drag | null) => { dragRef.current = d; setDragState(d); };
+  const skip = (el: EventTarget) => !!(el as HTMLElement).closest('button,input,select,textarea,label,a');
+  const track = (x: number, y: number) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const col = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-day]');
+    const sc = scroller.current;
+    if (sc) { if (x < 40) sc.scrollLeft -= 14; else if (x > window.innerWidth - 40) sc.scrollLeft += 14; }
+    setDrag({ ...d, x, y, over: col?.dataset.day ?? d.over });
+  };
+  const finish = () => {
+    const d = dragRef.current;
+    if (d && d.over !== d.from) a.move(d.t, d.from, d.over);
+    setDrag(null);
+  };
+  const dragHandlers = (t: DayTask, from: string) => ({
+    onMouseDown: (e: React.MouseEvent) => {
+      if (e.button !== 0 || skip(e.target)) return;
+      const sx = e.clientX, sy = e.clientY;
+      const w = (e.currentTarget as HTMLElement).offsetWidth;
+      let started = false;
+      const move = (ev: MouseEvent) => {
+        if (!started && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 6) { started = true; setDrag({ t, from, x: ev.clientX, y: ev.clientY, over: from, w }); }
+        if (started) { ev.preventDefault(); track(ev.clientX, ev.clientY); }
+      };
+      const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); if (started) finish(); };
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+    },
+    onTouchStart: (e: React.TouchEvent) => {
+      if (skip(e.target) || e.touches.length > 1) return;
+      const p0 = e.touches[0];
+      const sx = p0.clientX, sy = p0.clientY;
+      const w = (e.currentTarget as HTMLElement).offsetWidth;
+      let started = false;
+      const timer = setTimeout(() => { started = true; navigator.vibrate?.(12); setDrag({ t, from, x: sx, y: sy, over: from, w }); }, 350);
+      const move = (ev: TouchEvent) => {
+        const p = ev.touches[0];
+        if (!started) { if (Math.hypot(p.clientX - sx, p.clientY - sy) > 10) cleanup(); return; }
+        ev.preventDefault(); // 드래그 중엔 스크롤 막기
+        track(p.clientX, p.clientY);
+      };
+      const end = () => { cleanup(); if (started) finish(); };
+      const cleanup = () => { clearTimeout(timer); window.removeEventListener('touchmove', move); window.removeEventListener('touchend', end); window.removeEventListener('touchcancel', end); };
+      window.addEventListener('touchmove', move, { passive: false });
+      window.addEventListener('touchend', end);
+      window.addEventListener('touchcancel', end);
+    },
+  });
 
   useEffect(() => {
     const el = scroller.current?.querySelector<HTMLElement>(`[data-day="${today}"]`) ?? scroller.current?.querySelector<HTMLElement>('[data-day]');
@@ -33,7 +89,7 @@ export function WeekBoard({ days, today, onOpen }: { days: string[]; today: stri
           const red = weekday(d) === 0 || plan.holidays.has(d);
           return (
             <section key={d} data-day={d}
-              className={`flex w-[86vw] max-w-[22rem] shrink-0 snap-start flex-col rounded-[22px] p-2.5 sm:w-[19rem] ${isToday ? 'bg-zinc-200/70 dark:bg-zinc-800/70' : 'bg-zinc-100/80 dark:bg-zinc-900/60'}`}>
+              className={`flex w-[86vw] max-w-[22rem] shrink-0 snap-start flex-col rounded-[22px] p-2.5 transition-[box-shadow,background-color] duration-200 sm:w-[19rem] ${isToday ? 'bg-zinc-200/70 dark:bg-zinc-800/70' : 'bg-zinc-100/80 dark:bg-zinc-900/60'} ${drag && drag.over === d && drag.from !== d ? 'shadow-[inset_0_0_0_2px_#18181b] dark:shadow-[inset_0_0_0_2px_#fafafa]' : ''}`}>
               <button className="press mb-2 flex items-end gap-2 rounded-2xl px-2 py-1.5 text-left" onClick={() => onOpen(d)}>
                 <span className={`text-3xl leading-none ${red ? 'text-rose-400' : ''}`}>{wdName(d)}</span>
                 <span className="pb-0.5 text-sm muted">{Number(d.slice(5, 7))}/{Number(d.slice(8))}</span>
@@ -50,7 +106,7 @@ export function WeekBoard({ days, today, onOpen }: { days: string[]; today: stri
               )}
               {off && <p className="px-2 pb-2 text-sm muted">휴 · {off}</p>}
               <ul className="flex flex-col gap-2">
-                {tasks.map((t) => <TaskRow key={t.id} t={t} date={d} a={a} size="lg" />)}
+                {tasks.map((t) => <TaskRow key={t.id} t={t} date={d} a={a} size="lg" drag={dragHandlers(t, d)} dimmed={drag?.t.id === t.id} />)}
               </ul>
               <QuickAdd date={d} />
             </section>
@@ -58,6 +114,15 @@ export function WeekBoard({ days, today, onOpen }: { days: string[]; today: stri
         })}
       </div>
       {a.scoreModal}
+      {drag && createPortal(
+        <div className="pointer-events-none fixed left-0 top-0 z-[60] rounded-2xl bg-white px-4 py-3 text-base shadow-[0_12px_40px_rgba(0,0,0,0.22)] dark:bg-zinc-800"
+          style={{ width: drag.w, transform: `translate(${drag.x - drag.w / 2}px, ${drag.y - 28}px) rotate(-1.5deg) scale(1.04)` }}>
+          <span className="absolute inset-y-3 left-0 w-[3px] rounded-full" style={{ background: subjectOf(drag.t.subject).color }} />
+          {drag.t.title}
+          <div className="mt-0.5 text-xs muted">{drag.over !== drag.from ? `→ ${wdName(drag.over)} ${Number(drag.over.slice(5, 7))}/${Number(drag.over.slice(8))}로 옮기기` : '다른 요일로 끌어 놓기'}</div>
+        </div>,
+        document.body,
+      )}
     </>
   );
 }
