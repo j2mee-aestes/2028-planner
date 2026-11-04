@@ -54,6 +54,10 @@ describe('커리 생성', () => {
     for (const [d, n] of [['2027-04-05', 1], ['2027-04-06', 0], ['2027-04-07', 1]] as const)
       expect((p.byDate[d] ?? []).filter((t) => t.trackId === 'kor-mock')).toHaveLength(n);
   });
+  it('과탐 자습 블록은 요일별 시간으로 생성', () => {
+    expect(p.byDate['2027-01-16'].find((t) => t.trackId === 'c-self-w')?.estMin).toBe(120);
+    expect(p.byDate['2027-01-17']?.find((t) => t.trackId === 'c-self-w')).toBeUndefined();
+  });
   it('과탐은 1학기 기말 이후 없음', () => {
     const after = Object.entries(p.byDate).filter(([d, ts]) => d > '2027-07-10' && ts.some((t) => t.subject === 'sci'));
     expect(after).toHaveLength(0);

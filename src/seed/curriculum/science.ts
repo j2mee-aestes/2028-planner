@@ -2,22 +2,30 @@ import type { Track } from '../../lib/types';
 import { seq } from './helpers';
 
 // 통합과학: 인강 없이 교재만. 12/15 ~ 3학년 1학기 내신기간까지 (이후 학원)
-// 교재 후보(확정 전): 수능ON 통합과학(미래엔, 2028 대비), 메가스터디 N제 통합과학1·2, 이투스북 BON 수능 N제 통합과학(출간 예정)
+// 교재는 EBS 수능특강·수능완성만 지정. 나머지는 요일별 자습 시간 블록(교재 자유).
+// 시간 바꾸기: blocks 의 { 요일(0=일): 분 } 수정
 const P = ['winter', 'sem1', 'exam'] as const;
 
 export const SCIENCE: Track[] = [
   {
-    id: 'c-on',
+    id: 'c-self-w',
     subject: 'sci',
-    title: '수능ON 통합과학 (개념+문제)',
+    title: '통합과학 자습',
     kind: 'study',
-    phases: [...P],
+    phases: ['winter'],
+    blocks: { 1: 60, 2: 60, 3: 60, 4: 60, 5: 60, 6: 120 }, // 겨울방학: 월~금 1시간, 토 2시간
+    units: [],
+  },
+  {
+    id: 'c-self-s',
+    subject: 'sci',
+    title: '통합과학 자습',
+    kind: 'study',
+    phases: ['sem1', 'exam'],
     endAfterExams: true,
-    startDate: '2026-12-15',
-    examMode: 'half',
-    estMin: 60,
-    tentative: true,
-    units: seq('c-on', '수능ON 통합과학', 30),
+    blocks: { 2: 60, 4: 60, 6: 120 }, // 학기 중: 화·목 1시간, 토 2시간
+    examMode: { weekdays: [6] }, // 내신기간: 토요일만
+    units: [],
   },
   {
     id: 'c-ebs1',
@@ -26,60 +34,11 @@ export const SCIENCE: Track[] = [
     kind: 'study',
     phases: [...P],
     endAfterExams: true,
-    after: 'c-on',
     startDate: '2027-02-01',
+    weekdays: [1, 3, 5],
     examMode: 'half',
     estMin: 60,
     units: seq('c-ebs1', '수능특강 통합과학', 25),
-  },
-  {
-    id: 'c-past',
-    subject: 'sci',
-    title: '통합과학 학평 기출 (2022 개정)',
-    kind: 'mock',
-    phases: [...P],
-    endAfterExams: true,
-    startDate: '2027-03-01',
-    weekdays: [6],
-    estMin: 60,
-    units: [
-      { id: 'c-past-ex', title: '2028 수능 예시문항 (평가원)', org: '평가원' },
-      ...[2025, 2026].flatMap((y) =>
-        [3, 6, 9, 11].map((m) => ({ id: `c-past-1-${y}-${m}`, title: `${y}년 ${m}월 고1 학평 통합과학`, org: '교육청' })),
-      ),
-      ...[3, 6, 9, 11].map((m) => ({
-        id: `c-past-2-2026-${m}`,
-        title: `2026년 ${m}월 고2 학평 통합과학 (시행 시)`,
-        org: '교육청',
-        tentative: true,
-      })),
-    ],
-  },
-  {
-    id: 'c-n',
-    subject: 'sci',
-    title: '통합과학 문제집 (교재 미정)',
-    kind: 'study',
-    phases: [...P],
-    endAfterExams: true,
-    after: 'c-ebs1',
-    examMode: 'half',
-    estMin: 60,
-    tentative: true,
-    note: '후보: 메가스터디 N제 통합과학1·2 / 이투스북 BON 수능 N제 통합과학',
-    units: seq('c-n', '통합과학 문제집 (통합과학1·2)', 50),
-  },
-  {
-    id: 'c-re',
-    subject: 'sci',
-    title: '수특 통합과학 2회독 · 오답 정리',
-    kind: 'study',
-    phases: [...P],
-    endAfterExams: true,
-    after: 'c-n',
-    examMode: 'half',
-    estMin: 50,
-    units: seq('c-re', '수특 통합과학 2회독', 20),
   },
   {
     id: 'c-ebs2',
@@ -88,8 +47,8 @@ export const SCIENCE: Track[] = [
     kind: 'study',
     phases: [...P],
     endAfterExams: true,
+    after: 'c-ebs1',
     startDate: '2027-06-08',
-    examMode: 'same',
     estMin: 60,
     tentative: true,
     units: seq('c-ebs2', '수능완성 통합과학', 20),

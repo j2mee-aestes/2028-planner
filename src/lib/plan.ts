@@ -1,6 +1,6 @@
 import { CURRICULUM } from '../seed/curriculum';
 import { EVENTS, HOLIDAYS, PERSONAL_OFF, PLAN_END, PLAN_START } from '../seed/calendar';
-import { addDays, eachDay, isWeekend, weekday } from './date';
+import { addDays, eachDay, fmtHM, isWeekend, weekday } from './date';
 import type { Holiday, PhaseId, PlanTask, SchoolCalendar, Settings, Track } from './types';
 
 export const PHASE_LABEL: Record<PhaseId, string> = {
@@ -101,10 +101,11 @@ export function generatePlan(settings: Settings, tracks: Track[] = CURRICULUM): 
     if (t.endAfterExams && settings.school.exams.length)
       end = settings.school.exams.map((e) => e.end).reduce((a, b) => (a > b ? a : b));
     let examCount = 0;
+    let blockCount = 0;
     let first: string | undefined;
     let last: string | undefined;
     for (const d of days) {
-      if (!remaining.length) break;
+      if (!remaining.length && !t.blocks) break;
       if (d < start || d > end) continue;
       const ph = phases.get(d)!;
       if (!t.phases.includes(ph)) continue;
@@ -117,6 +118,21 @@ export function generatePlan(settings: Settings, tracks: Track[] = CURRICULUM): 
           if (!mode.weekdays.includes(wd)) continue;
         } else if (t.weekdays && !t.weekdays.includes(wd)) continue;
       } else if (t.weekdays && !t.weekdays.includes(wd)) continue;
+
+      if (t.blocks) {
+        const min = t.blocks[wd];
+        if (!min) continue;
+        const task: PlanTask = {
+          id: `${t.id}:${d}`, trackId: t.id, subject: t.subject, title: `${t.title} ${fmtHM(min)}`,
+          trackTitle: t.title, kind: t.kind, date: d, estMin: min, tentative: t.tentative,
+        };
+        (byDate[d] ??= []).push(task);
+        byId[task.id] = task;
+        first ??= d;
+        last = d;
+        blockCount++;
+        continue;
+      }
 
       const n = isWeekend(d) ? (t.weekendPerDay ?? t.perDay ?? 1) : (t.perDay ?? 1);
       for (let k = 0; k < n; k++) {
@@ -142,7 +158,9 @@ export function generatePlan(settings: Settings, tracks: Track[] = CURRICULUM): 
       }
     }
     lastOf[t.id] = last;
-    stats.push({ track: t, total: t.units.length, assigned: t.units.length - remaining.length, first, last });
+    stats.push(t.blocks
+      ? { track: t, total: blockCount, assigned: blockCount, first, last }
+      : { track: t, total: t.units.length, assigned: t.units.length - remaining.length, first, last });
   }
 
   const events: Plan['events'] = {};

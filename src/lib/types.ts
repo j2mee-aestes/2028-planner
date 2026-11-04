@@ -45,6 +45,8 @@ export interface Track {
   estMin?: number;
   note?: string;
   tentative?: boolean;
+  /** 시간 블록 트랙: 요일(0=일)→분. 지정 시 units 대신 해당 요일마다 '○시간' 항목 생성 (기간 끝까지 반복) */
+  blocks?: Partial<Record<number, number>>;
   units: Unit[];
 }
 
