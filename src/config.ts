@@ -12,4 +12,4 @@ export const FIREBASE_CONFIG = {
 export const VAPID_KEY = 'BKcj9JwAxKy9hX4XXpYqEc8cD4BtbCvlffQmBgYwlFVaHY5uJZqHMlXhixdk5nC9DD7N8VnZazYk4Lawpz-y5WI';
 
 /** 로그인 허용 이메일 (firestore.rules 와 동일하게) */
-export const ALLOWED_EMAIL_DEFAULT = '';
+export const ALLOWED_EMAIL_DEFAULT = 'jinn9626@gmail.com';

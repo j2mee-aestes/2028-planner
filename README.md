@@ -34,7 +34,7 @@ npm test           # 휴일 규칙·커리 생성 테스트
 2. **Authentication** → 시작하기 → 로그인 방법 → **Google** 사용 설정
 3. **Firestore Database** → 데이터베이스 만들기 → 위치 `asia-northeast3 (서울)` → 프로덕션 모드
 4. Firebase 웹 설정·알림 공개 키·프로젝트 ID(`planner-eff14`)는 이미 `src/config.ts`, `.firebaserc` 에 들어 있음 (`.env` 불필요)
-5. 로그인 허용 이메일: `src/config.ts` 의 `ALLOWED_EMAIL_DEFAULT` 와 `firestore.rules` 의 `YOUR_EMAIL@gmail.com` 을 본인 구글 계정으로
+5. 로그인 허용 이메일은 `src/config.ts` 의 `ALLOWED_EMAIL_DEFAULT` 와 `firestore.rules` 에 설정됨 (계정을 바꿀 때는 두 곳 모두 수정)
 6. 배포
    ```bash
    npm i -g firebase-tools
