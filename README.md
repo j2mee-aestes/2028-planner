@@ -33,27 +33,20 @@ npm test           # 휴일 규칙·커리 생성 테스트
 1. https://console.firebase.google.com → 프로젝트 만들기
 2. **Authentication** → 시작하기 → 로그인 방법 → **Google** 사용 설정
 3. **Firestore Database** → 데이터베이스 만들기 → 위치 `asia-northeast3 (서울)` → 프로덕션 모드
-4. 프로젝트 설정 → 내 앱 → 웹 앱 추가 → 표시되는 config 로 `.env` 작성 (`.env.example` 복사)
-   ```
-   VITE_FIREBASE_API_KEY=...
-   VITE_FIREBASE_AUTH_DOMAIN=<project>.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=<project>
-   VITE_FIREBASE_APP_ID=...
-   VITE_ALLOWED_EMAIL=로그인할구글계정@gmail.com
-   ```
-5. `firestore.rules` 의 `YOUR_EMAIL@gmail.com` 을 같은 이메일로, `.firebaserc` 의 `YOUR_FIREBASE_PROJECT_ID` 를 프로젝트 ID 로 수정
+4. Firebase 웹 설정·알림 공개 키·프로젝트 ID(`planner-eff14`)는 이미 `src/config.ts`, `.firebaserc` 에 들어 있음 (`.env` 불필요)
+5. 로그인 허용 이메일: `src/config.ts` 의 `ALLOWED_EMAIL_DEFAULT` 와 `firestore.rules` 의 `YOUR_EMAIL@gmail.com` 을 본인 구글 계정으로
 6. 배포
    ```bash
    npm i -g firebase-tools
    firebase login
    npm run deploy      # 빌드 + Hosting + Firestore 보안 규칙 배포
    ```
-7. `https://<project>.web.app` 접속 → Google 로그인. 휴대폰은 브라우저 메뉴 "홈 화면에 추가"로 앱처럼 사용.
+7. `https://planner-eff14.web.app` 접속 → Google 로그인. 휴대폰은 브라우저 메뉴 "홈 화면에 추가"로 앱처럼 사용.
 
 ### 휴대폰 알림 설정 (무료: GitHub Actions 로 발송)
 Cloud Functions 는 유료 요금제가 필요해서, 이 저장소의 GitHub Actions 가 매일 정해진 시각에 발송합니다.
-1. Firebase 콘솔 → 프로젝트 설정 → **클라우드 메시징** → 웹 푸시 인증서 → **키 쌍 생성** → `.env` 의 `VITE_FIREBASE_VAPID_KEY`
-2. 같은 화면의 **발신자 ID** → `.env` 의 `VITE_FIREBASE_MESSAGING_SENDER_ID` → 다시 `npm run deploy`
+1. 웹 푸시 키와 발신자 ID는 `src/config.ts` 에 이미 설정됨
+2. (프로젝트를 바꾸면 그 프로젝트의 클라우드 메시징 → 웹 푸시 인증서 키로 교체)
 3. 프로젝트 설정 → **서비스 계정** → 새 비공개 키 생성(JSON 다운로드)
 4. GitHub 저장소 → Settings → Secrets and variables → Actions → **New repository secret**
    이름 `FIREBASE_SERVICE_ACCOUNT`, 값 = JSON 파일 내용 전체

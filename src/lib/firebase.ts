@@ -4,11 +4,13 @@ import {
   collection, deleteDoc, doc, initializeFirestore, onSnapshot, persistentLocalCache,
   persistentMultipleTabManager, setDoc, writeBatch, type Firestore,
 } from 'firebase/firestore';
+import { ALLOWED_EMAIL_DEFAULT, FIREBASE_CONFIG } from '../config';
 import type { AppData, DayRecord, Score, Settings, WrongNote } from './types';
 
 const env = import.meta.env;
-export const firebaseEnabled = Boolean(env.VITE_FIREBASE_API_KEY && env.VITE_FIREBASE_PROJECT_ID);
-export const ALLOWED_EMAIL = (env.VITE_ALLOWED_EMAIL as string | undefined)?.trim().toLowerCase();
+// VITE_LOCAL_MODE=1 이면 Firebase 없이 브라우저에만 저장 (테스트용)
+export const firebaseEnabled = env.VITE_LOCAL_MODE !== '1';
+export const ALLOWED_EMAIL = ((env.VITE_ALLOWED_EMAIL as string | undefined) || ALLOWED_EMAIL_DEFAULT).trim().toLowerCase() || undefined;
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
@@ -16,11 +18,11 @@ let db: Firestore | undefined;
 
 if (firebaseEnabled) {
   app = initializeApp({
-    apiKey: env.VITE_FIREBASE_API_KEY,
-    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: env.VITE_FIREBASE_PROJECT_ID,
-    appId: env.VITE_FIREBASE_APP_ID,
-    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    apiKey: env.VITE_FIREBASE_API_KEY || FIREBASE_CONFIG.apiKey,
+    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || FIREBASE_CONFIG.authDomain,
+    projectId: env.VITE_FIREBASE_PROJECT_ID || FIREBASE_CONFIG.projectId,
+    appId: env.VITE_FIREBASE_APP_ID || FIREBASE_CONFIG.appId,
+    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || FIREBASE_CONFIG.messagingSenderId,
   });
   auth = getAuth(app);
   // 로컬 캐시 우선: 쓰기는 기기에 즉시 반영되고 서버 동기화는 백그라운드. 오프라인에서도 동작.
