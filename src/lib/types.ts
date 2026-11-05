@@ -21,6 +21,8 @@ export interface Unit {
   /** 성적 자동 입력용 시행기관 */
   org?: string;
   tentative?: boolean;
+  /** 이 단위만의 예상 시간(분). 없으면 트랙 estMin */
+  estMin?: number;
 }
 
 /** 내신기간 처리: same=그대로, skip=중단, half=격일, weekdays=지정 요일만(0=일) */

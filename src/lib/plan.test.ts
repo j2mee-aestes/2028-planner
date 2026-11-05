@@ -143,3 +143,18 @@ describe('타이머·연습 기간', () => {
     expect(streaks({ settings: S, days, scores: {}, wrongs: {} }, p, '2026-12-15').studied).toBe(0); // 연습 기록 제외
   });
 });
+
+describe('국어·영어 모고 큐 (2021~ 기출 → 평가원 2회독 → 씨뮬 → 사설, 9/1 평가원 3회독)', () => {
+  const p = generatePlan(S);
+  for (const [tr, pre] of [['kor-mock', 'k'], ['eng-mock', 'e']] as const) {
+    const ts = Object.values(p.byId).filter((t) => t.trackId === tr).sort((a, b) => a.date.localeCompare(b.date));
+    it(`${tr}: 첫 회차는 2021학년도 3월 학평, 평가원 3회독은 9/1 시작`, () => {
+      expect(ts[0].id).toBe(`${tr}:${pre}-e2021-3`);
+      expect(ts.find((t) => t.id.includes('-r3-'))!.date).toBe('2027-09-01');
+      const iR2 = ts.findIndex((t) => t.id.includes('-r2-'));
+      const iSimul = ts.findIndex((t) => t.id.includes('simul'));
+      expect(iR2).toBe(49);
+      expect(iSimul).toBe(70);
+    });
+  }
+});

@@ -150,7 +150,7 @@ export function generatePlan(settings: Settings, tracks: Track[] = CURRICULUM): 
           trackTitle: t.title,
           kind: t.kind,
           date: d,
-          estMin: n > 1 ? Math.round((t.estMin ?? 60) / n) : t.estMin,
+          estMin: u.estMin ?? (n > 1 ? Math.round((t.estMin ?? 60) / n) : t.estMin),
           org: u.org,
           tentative: u.tentative ?? t.tentative,
         };

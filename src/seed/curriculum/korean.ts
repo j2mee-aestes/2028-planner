@@ -1,14 +1,5 @@
-import type { Track, Unit } from '../../lib/types';
-import { pastExamUnits, privateSet, seq } from './helpers';
-
-/** 갭 채우기: 사설 출시 전 빈 날에 자동 배정되는 예비 기출 (2017~2021학년도 교육청) */
-export function backupEduUnits(prefix: string): Unit[] {
-  const out: Unit[] = [];
-  for (let y = 2017; y <= 2021; y++)
-    for (const m of [3, 4, 7, 10])
-      out.push({ id: `${prefix}-b${y}-${m}`, title: `[예비] ${y - 1}년 ${m}월 고3 학평 (${y}학년도)`, org: '교육청' });
-  return out;
-}
+import type { Track } from '../../lib/types';
+import { pastExamRound3, pastExamUnits, privateSet, seq } from './helpers';
 
 export const KOREAN: Track[] = [
   {
@@ -20,9 +11,11 @@ export const KOREAN: Track[] = [
     perDay: 1,
     examMode: { weekdays: [1, 3, 5] }, // 내신기간 주 3회(월·수·금)
     estMin: 120,
-    note: '기출 57회(평가원 2017~2027, 교육청 2022~2027) → 사설. 사설은 출시일 이후 순서대로, 출시 전 빈 날은 [예비] 기출로 채움.',
+    note: '2021~2027학년도 기출 1회독(49) → 평가원 2회독(21) → 씨뮬 사설 → 신작 사설 → 9/1 평가원 3회독(21) → 파이널 사설 → 재풀이. 사설은 출시일 이후 순서대로.',
     units: [
-      ...pastExamUnits('k'),
+      ...pastExamUnits('k', 90),
+      ...privateSet('k-simul', '씨뮬 사설', 20, '2026-12-01'), // 지난 사설 시험 모음 · 회차는 책 받은 뒤 수정
+      ...pastExamRound3('k', 90),
       ...privateSet('k-igam1', '이감 상반기', 8, '2027-02-15'),
       ...privateSet('k-ss1', '상상 시즌1', 4, '2027-03-01'),
       ...privateSet('k-hs1', '한수 시즌1', 5, '2027-03-15'),
@@ -36,8 +29,7 @@ export const KOREAN: Track[] = [
       ...privateSet('k-ssf', '상상 파이널', 6, '2027-09-15'),
       ...privateSet('k-hsf', '한수 파이널', 4, '2027-10-01'),
       ...privateSet('k-igamf', '이감 파이널', 6, '2027-10-01'),
-      ...backupEduUnits('k'),
-      ...seq('k-redo', '취약 회차 재풀이', 70, { availableFrom: '2027-09-01' }),
+      ...seq('k-redo', '취약 회차 재풀이', 110, { availableFrom: '2027-03-01' }, (i) => `취약 회차 재풀이 · 또는 추가 사설 (${i})`), // 맨 뒤 = 다른 회차가 없는 빈 날에만 배정
     ],
   },
   {
