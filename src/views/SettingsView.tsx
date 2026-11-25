@@ -9,6 +9,7 @@ import { subjectOf } from '../seed/subjects';
 import { IconClose } from '../components/icons';
 import { Check, Disclosure, Segmented } from '../components/ui';
 import { getPushToken } from '../lib/push';
+import { WallpaperSheet } from '../components/WallpaperSheet';
 
 function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -149,6 +150,8 @@ export function SettingsView({ email }: { email?: string | null }) {
 
       <PushSection />
 
+      <WallpaperSection />
+
       <section className="card space-y-2 p-3">
         <h2 className="text-sm">백업</h2>
         <div className="flex gap-2">
@@ -182,6 +185,18 @@ export function SettingsView({ email }: { email?: string | null }) {
         )}
       </section>
     </div>
+  );
+}
+
+function WallpaperSection() {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="card space-y-2 p-3">
+      <h2 className="text-sm">배경화면</h2>
+      <p className="text-xs muted">D-day · 오늘 할 일 · 오늘 공부 시간을 잠금화면/바탕화면 이미지로 만들어요.</p>
+      <button className="btn-primary" onClick={() => setOpen(true)}>배경화면 만들기</button>
+      <WallpaperSheet open={open} onClose={() => setOpen(false)} />
+    </section>
   );
 }
 

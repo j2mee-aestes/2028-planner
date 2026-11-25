@@ -1,7 +1,8 @@
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { useEffect, useMemo, useState } from 'react';
 import { DayDetail } from './components/DayDetail';
-import { IconCalendar, IconChart, IconScore, IconSettings, IconToday } from './components/icons';
+import { IconCalendar, IconChart, IconImage, IconScore, IconSettings, IconToday } from './components/icons';
+import { WallpaperSheet } from './components/WallpaperSheet';
 import { FocusTimer } from './components/FocusTimer';
 import { PracticeReset } from './components/PracticeReset';
 import { PostponedSheet, usePostponed } from './components/PostponedSheet';
@@ -34,6 +35,7 @@ function Shell({ email }: { email?: string | null }) {
   // 매주 토요일: 미룬 할 일이 있으면 하루 한 번 자동으로 정리 창 띄우기
   const postponed = usePostponed();
   const [satPrompt, setSatPrompt] = useState(false);
+  const [wall, setWall] = useState(false);
   useEffect(() => {
     if (!loaded || weekday(today) !== 6 || postponed.length === 0) return;
     try {
@@ -56,11 +58,19 @@ function Shell({ email }: { email?: string | null }) {
             <Icon size={19} />{l}
           </button>
         ))}
+        {loaded && (
+          <button onClick={() => setWall(true)} className="press muted mt-auto flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-zinc-200/50 dark:hover:bg-zinc-900">
+            <IconImage size={19} />배경화면
+          </button>
+        )}
       </nav>
       <main className="min-w-0 flex-1 px-4 pb-28 md:px-6 md:pb-8 md:pt-5">
         <div className="glass sticky top-0 z-30 -mx-4 mb-3 flex items-center justify-between border-b border-zinc-200/60 px-4 pb-2.5 pt-[max(0.75rem,env(safe-area-inset-top))] dark:border-zinc-800/60 md:hidden">
           <span className="text-[15px]">2028 수능 플래너</span>
-          <span className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900">D-{dday}</span>
+          <div className="flex items-center gap-1">
+            {loaded && <button className="icon-btn h-8 w-8" onClick={() => setWall(true)} aria-label="배경화면 만들기"><IconImage size={19} /></button>}
+            <span className="rounded-full bg-zinc-900 px-2.5 py-0.5 text-xs text-white dark:bg-zinc-100 dark:text-zinc-900">D-{dday}</span>
+          </div>
         </div>
         {!loaded ? <p className="muted">불러오는 중…</p> : (
           <div key={view} className="anim-view">
@@ -72,6 +82,7 @@ function Shell({ email }: { email?: string | null }) {
           </div>
         )}
       </main>
+      {loaded && <WallpaperSheet open={wall} onClose={() => setWall(false)} />}
       <PostponedSheet open={satPrompt} onClose={() => setSatPrompt(false)} saturday />
       {loaded && <FocusTimer />}
       <PracticeReset />
