@@ -44,6 +44,13 @@ npm test           # 휴일 규칙·커리 생성 테스트
    ```
 7. `https://planner-eff14.web.app` 접속 → Google 로그인. 휴대폰은 브라우저 메뉴 "홈 화면에 추가"로 앱처럼 사용.
 
+### 자동 배경화면 (아이폰 단축어)
+배경화면 → **자동 반영 켜기** → 주소 복사 → 시트 안의 "아이폰 단축어 설정 방법"대로 단축어 + 시간 자동화 만들기.
+- 앱에서 체크·공부 기록이 바뀌면 몇 초 뒤 이미지가 `wallpapers/{비밀 토큰}` 문서로 업로드됨 (앱이 열려 있는 동안 10분마다도 확인)
+- 날짜가 바뀌면 GitHub Actions(`.github/workflows/wallpaper.yml`, 00:07·05:07 KST)가 서버에서 새 날짜로 다시 그림 — 알림과 같은 `FIREBASE_SERVICE_ACCOUNT` 시크릿 사용
+- 단축어는 실행될 때 최신 이미지를 받아 잠금화면으로 설정. 주소를 아는 사람은 이미지를 볼 수 있으니 공유하지 말고, 필요하면 "새 주소 만들기"
+- 처음 켤 때 `npm run deploy` 로 보안 규칙(`firestore.rules`)이 배포돼 있어야 함
+
 ### 휴대폰 알림 설정 (무료: GitHub Actions 로 발송)
 Cloud Functions 는 유료 요금제가 필요해서, 이 저장소의 GitHub Actions 가 매일 정해진 시각에 발송합니다.
 1. 웹 푸시 키와 발신자 ID는 `src/config.ts` 에 이미 설정됨

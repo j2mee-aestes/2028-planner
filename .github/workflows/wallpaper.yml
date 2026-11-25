@@ -1,0 +1,25 @@
+name: 자동 배경화면 갱신
+
+on:
+  schedule:
+    - cron: '7 15 * * *' # 매일 00:07 KST (날짜 바뀐 직후)
+    - cron: '7 20 * * *' # 05:07 KST (자정 실행이 늦거나 빠졌을 때 대비)
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 고운돋움 폰트 받기
+        run: curl -sSfL -o /tmp/GowunDodum.ttf https://github.com/google/fonts/raw/main/ofl/gowundodum/GowunDodum-Regular.ttf || echo "폰트 다운로드 실패 — 기본 글꼴 사용"
+      - run: npx esbuild scripts/render-wallpaper.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=.wall/render.mjs
+      - run: node .wall/render.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          WALL_FONT: /tmp/GowunDodum.ttf

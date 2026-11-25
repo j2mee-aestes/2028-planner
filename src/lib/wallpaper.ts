@@ -6,7 +6,7 @@ import { phaseLabel, type Plan } from './plan';
 import { streaks } from './insights';
 import { dayMinutes, overdue, tasksOf, weekRange } from './stats';
 import { elapsedMs } from './timer';
-import type { AppData } from './types';
+import type { AppData, WallConfig } from './types';
 
 export interface WallInfo {
   date: string;
@@ -109,11 +109,14 @@ function fit(ctx: CanvasRenderingContext2D, s: string, max: number) {
   return s.slice(0, lo) + '…';
 }
 
-export function drawWallpaper(canvas: HTMLCanvasElement, info: WallInfo, o: WallOptions) {
+/** 브라우저 canvas 와 서버(@napi-rs/canvas) 모두 사용 */
+export interface CanvasLike { width: number; height: number; getContext(type: '2d'): any }
+
+export function drawWallpaper(canvas: CanvasLike, info: WallInfo, o: WallOptions) {
   const { width: W, height: H } = o;
   canvas.width = W;
   canvas.height = H;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
   const c = palette(o.theme);
   const land = W > H * 1.05;
   // 기준 단위: 세로는 폭 390pt, 가로는 높이 800 기준
@@ -348,3 +351,26 @@ export function deviceSize(): WallSize | null {
   if (!w || !h) return null;
   return { id: 'device', label: `이 기기 (${w}×${h})`, w, h };
 }
+
+/** 내용이 바뀌었는지 비교용 (갱신 시각 제외) */
+export const wallKey = (info: WallInfo, c: WallConfig) => JSON.stringify([{ ...info, at: 0 }, c.token, c.w, c.h, c.theme, c.lockSpace]);
+
+/** Firestore 문서 한도(1MiB) 안에 들도록 JPEG 품질을 낮춰가며 data URL 생성 */
+export function encodeJpeg(toDataURL: (q: number) => string) {
+  for (const q of [0.88, 0.8, 0.7, 0.6, 0.5]) {
+    const s = toDataURL(q);
+    if (s.length < 950_000) return s.slice(s.indexOf(',') + 1);
+  }
+  throw new Error('이미지가 너무 큽니다');
+}
+
+const rand = () => {
+  const a = new Uint8Array(18);
+  crypto.getRandomValues(a);
+  return Array.from(a, (b) => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+};
+export const newWallToken = () => rand() + rand();
+
+/** 단축어가 읽어갈 공개 주소 (토큰을 아는 사람만 읽기 가능) */
+export const wallUrl = (projectId: string, token: string) =>
+  `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/wallpapers/${token}?mask.fieldPaths=img`;

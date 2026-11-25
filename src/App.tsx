@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DayDetail } from './components/DayDetail';
 import { IconCalendar, IconChart, IconImage, IconScore, IconSettings, IconToday } from './components/icons';
 import { WallpaperSheet } from './components/WallpaperSheet';
+import { AutoWallpaper } from './components/AutoWallpaper';
 import { FocusTimer } from './components/FocusTimer';
 import { PracticeReset } from './components/PracticeReset';
 import { PostponedSheet, usePostponed } from './components/PostponedSheet';
@@ -83,6 +84,7 @@ function Shell({ email }: { email?: string | null }) {
         )}
       </main>
       {loaded && <WallpaperSheet open={wall} onClose={() => setWall(false)} />}
+      {loaded && <AutoWallpaper />}
       <PostponedSheet open={satPrompt} onClose={() => setSatPrompt(false)} saturday />
       {loaded && <FocusTimer />}
       <PracticeReset />
