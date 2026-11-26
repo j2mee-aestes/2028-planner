@@ -102,16 +102,6 @@ export function firestoreBackend(uid: string): Backend {
   };
 }
 
-/** 자동 배경화면 이미지 업로드 (base64 JPEG). 규칙상 토큰 문서는 누구나 단건 읽기, 쓰기는 본인만 */
-export const projectId = env.VITE_FIREBASE_PROJECT_ID || FIREBASE_CONFIG.projectId;
-export async function uploadWallpaper(token: string, img: string) {
-  if (!db) return;
-  await setDoc(doc(db, `wallpapers/${token}`), { img, at: Date.now() });
-}
-export async function deleteWallpaper(token: string) {
-  if (db) await deleteDoc(doc(db, `wallpapers/${token}`)).catch(() => {});
-}
-
 /** Firebase 미설정 시(로컬 개발) 브라우저 저장소 사용 */
 export function localBackend(): Backend {
   const KEY = 'planner-data-v1';

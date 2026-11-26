@@ -67,6 +67,3 @@ export const IconTrash = (p: P) => (
   <Svg {...p}><path d="M4.5 7h15M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M6.5 7l.8 11.5a2 2 0 0 0 2 1.8h5.4a2 2 0 0 0 2-1.8L17.5 7" /></Svg>
 );
 export const IconUndo = (p: P) => <Svg {...p}><path d="M9 7L5 11l4 4" /><path d="M5 11h9a5 5 0 0 1 0 10h-2" /></Svg>;
-export const IconImage = (p: P) => (
-  <Svg {...p}><rect x="4" y="4" width="16" height="16" rx="3.5" /><circle cx="9.2" cy="9.2" r="1.6" /><path d="M20 15.5l-4.5-4.5L6 20" /></Svg>
-);

@@ -101,18 +101,6 @@ export interface Settings {
   practiceReset?: boolean;
   /** 휴대폰 알림 (GitHub Actions 가 읽어서 발송) */
   push?: { tokens: string[]; morning: boolean; saturday: boolean };
-  /** 자동 배경화면: 바뀔 때마다 wallpapers/{token} 에 이미지 업로드 (단축어가 읽어감) */
-  wall?: WallConfig;
-}
-
-export interface WallConfig {
-  auto: boolean;
-  /** 공개 주소용 비밀 토큰 */
-  token: string;
-  w: number;
-  h: number;
-  theme: 'light' | 'dark';
-  lockSpace: boolean;
 }
 
 export interface CustomTask {
